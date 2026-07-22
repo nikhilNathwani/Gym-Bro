@@ -87,3 +87,11 @@ create policy "owner full access" on exercise_logs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "owner full access" on set_logs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Table-level grants: RLS policies above are the real access control, but Postgres
+-- still requires the `authenticated` role to hold baseline table privileges before
+-- RLS is even evaluated. We deliberately do NOT grant anything to `anon` — this app
+-- has no unauthenticated access, so the app-level login gate plus this omission
+-- give defense in depth even if RLS were ever misconfigured.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on days, exercises, cues, workout_sessions, exercise_logs, set_logs to authenticated;
