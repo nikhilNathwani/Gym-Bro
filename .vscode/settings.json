@@ -1,0 +1,17 @@
+{
+	// Collapse root-level project config under CONFIG.md instead of hiding
+	// it outright — still reachable/expandable, just not several separate
+	// rows. CONFIG.md briefly documents each nested file, which is why it's
+	// the parent instead of package.json (just one config file among equals).
+	"explorer.fileNesting.enabled": true,
+	"explorer.fileNesting.expand": false,
+	"explorer.fileNesting.patterns": {
+		"CONFIG.md": "package.json, package-lock.json, tsconfig.json, tsconfig.tsbuildinfo, next.config.ts, next-env.d.ts, eslint.config.mjs, postcss.config.mjs, .gitignore, .env.local, .env.local.example"
+	},
+	// Build/dependency output — regenerated automatically, already gitignored,
+	// never hand-edited. Hiding is visual only; doesn't affect npm/Next.js.
+	"files.exclude": {
+		"node_modules/": true,
+		".next/": true
+	}
+}
