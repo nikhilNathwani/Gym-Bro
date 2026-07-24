@@ -1,30 +1,36 @@
--- Gym Bro seed data: your real "Day A" routine, plus one logged session so the
--- "show last time's numbers" feature has real data to render against.
+-- Gym Bro seed data: your real "Routine A" workout, plus one logged session so
+-- the "show last time's numbers" feature has real data to render against.
 -- Run this once in the Supabase SQL Editor, after schema.sql, while logged into
 -- this project (assumes exactly one row in auth.users — true for this single-user app).
+--
+-- Only for a FRESH database. If you already ran this once, don't run it again —
+-- there's no de-duplication, so it'll insert a second copy of everything.
 
 do $$
 declare
   v_user_id uuid;
-  v_day_id uuid;
+  v_routine_id uuid;
   v_session_id uuid;
   v_exercise_id uuid;
   v_exercise_log_id uuid;
 begin
   select id into v_user_id from auth.users limit 1;
 
-  insert into days (user_id, name, sort_order)
-  values (v_user_id, 'Day A', 0)
-  returning id into v_day_id;
+  insert into routines (user_id, label, sort_order)
+  values (v_user_id, null, 0)
+  returning id into v_routine_id;
 
-  insert into workout_sessions (user_id, day_id, performed_at)
-  values (v_user_id, v_day_id, now() - interval '7 days')
+  insert into workout_sessions (user_id, routine_id, performed_at)
+  values (v_user_id, v_routine_id, now() - interval '7 days')
   returning id into v_session_id;
 
   -- Exercise 1: Assisted Pull-ups
-  insert into exercises (user_id, day_id, name, sort_order, target_sets, target_reps_low, target_reps_high)
-  values (v_user_id, v_day_id, 'Assisted Pull-ups', 0, 3, 6, 10)
+  insert into exercises (user_id, name, subtitle)
+  values (v_user_id, 'Assisted Pull-ups', '3 sets × 6–10 reps')
   returning id into v_exercise_id;
+
+  insert into routine_exercises (user_id, routine_id, exercise_id, sort_order)
+  values (v_user_id, v_routine_id, v_exercise_id, 0);
 
   insert into cues (user_id, exercise_id, text, sort_order, level, is_header) values
     (v_user_id, v_exercise_id, 'Chest proud', 0, 0, false),
@@ -42,9 +48,12 @@ begin
     (v_user_id, v_exercise_log_id, 3, 100, 10);
 
   -- Exercise 2: Seated Dumbbell Overhead Press
-  insert into exercises (user_id, day_id, name, sort_order, target_sets, target_reps_low, target_reps_high)
-  values (v_user_id, v_day_id, 'Seated Dumbbell Overhead Press', 1, 3, 8, 10)
+  insert into exercises (user_id, name, subtitle)
+  values (v_user_id, 'Seated Dumbbell Overhead Press', '3 sets × 8–10 reps')
   returning id into v_exercise_id;
+
+  insert into routine_exercises (user_id, routine_id, exercise_id, sort_order)
+  values (v_user_id, v_routine_id, v_exercise_id, 1);
 
   insert into cues (user_id, exercise_id, text, sort_order, level, is_header) values
     (v_user_id, v_exercise_id, 'Back supported', 0, 0, false),
@@ -75,9 +84,12 @@ begin
     (v_user_id, v_exercise_log_id, 3, 15, 10);
 
   -- Exercise 3: Dumbbell Lateral Raises
-  insert into exercises (user_id, day_id, name, sort_order, target_sets, target_reps_low, target_reps_high)
-  values (v_user_id, v_day_id, 'Dumbbell Lateral Raises', 2, 3, 12, 15)
+  insert into exercises (user_id, name, subtitle)
+  values (v_user_id, 'Dumbbell Lateral Raises', '3 sets × 12–15 reps')
   returning id into v_exercise_id;
+
+  insert into routine_exercises (user_id, routine_id, exercise_id, sort_order)
+  values (v_user_id, v_routine_id, v_exercise_id, 2);
 
   insert into cues (user_id, exercise_id, text, sort_order, level, is_header) values
     (v_user_id, v_exercise_id, 'Slight bend in elbows', 0, 0, false),

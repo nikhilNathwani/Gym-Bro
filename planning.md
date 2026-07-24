@@ -39,16 +39,16 @@ Cues:
 - Don't force dumbbells together at the top
 - Controlled lowering
 - Before pressing:
-    - Squeeze your shoulder blades lightly into the bench
-    - Brace your abs (don’t let your ribs flare up)
-    - Get the dumbbells settled at shoulder height
+  - Squeeze your shoulder blades lightly into the bench
+  - Brace your abs (don’t let your ribs flare up)
+  - Get the dumbbells settled at shoulder height
 - During:
-    - Keep elbows slightly forward (not directly out to your sides)
-    - Imagine pressing the dumbbells “up and slightly inward”
-    - Don’t worry about making them touch at the top
+  - Keep elbows slightly forward (not directly out to your sides)
+  - Imagine pressing the dumbbells “up and slightly inward”
+  - Don’t worry about making them touch at the top
 - Lowering:
-    - Take 2 seconds down
-    - Don’t let the dumbbells drop into the bottom position
+  - Take 2 seconds down
+  - Don’t let the dumbbells drop into the bottom position
 
 ——————————————————————————————————————————————
 

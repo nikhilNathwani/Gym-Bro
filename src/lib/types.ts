@@ -1,6 +1,6 @@
-export type Day = {
+export type Routine = {
   id: string;
-  name: string;
+  label: string | null;
   sort_order: number;
 };
 
@@ -15,9 +15,37 @@ export type Cue = {
 export type Exercise = {
   id: string;
   name: string;
-  sort_order: number;
-  target_sets: number | null;
-  target_reps_low: number | null;
-  target_reps_high: number | null;
+  subtitle: string | null;
+};
+
+export type ExerciseWithCues = Exercise & {
   cues: Cue[];
+};
+
+export type RoutineExercise = {
+  id: string;
+  sort_order: number;
+  exercise: Exercise;
+};
+
+export type RoutineDetail = Routine & {
+  routine_exercises: RoutineExercise[];
+};
+
+export type SetLog = {
+  id: string;
+  set_number: number;
+  weight: number | null;
+  reps: number | null;
+};
+
+export type ExerciseLog = {
+  id: string;
+  notes: string | null;
+  created_at: string;
+  set_logs: SetLog[];
+};
+
+export type ExerciseDetail = ExerciseWithCues & {
+  exercise_logs: ExerciseLog[];
 };
