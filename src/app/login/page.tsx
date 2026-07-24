@@ -8,22 +8,20 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <form
         action={login}
-        className="w-full max-w-sm rounded-2xl bg-neutral-900 p-6 shadow-xl"
+        className="w-full max-w-sm border-2 border-black p-6"
       >
-        <h1 className="mb-6 text-xl font-semibold text-neutral-100">
-          Gym Bro
-        </h1>
+        <h1 className="mb-6 text-xl font-semibold">Gym Bro</h1>
 
         {error && (
-          <p className="mb-4 rounded-lg bg-red-950 px-3 py-2 text-sm text-red-300">
+          <p className="mb-4 border-2 border-black px-3 py-2 text-sm">
             {error}
           </p>
         )}
 
-        <label className="mb-1 block text-sm text-neutral-400" htmlFor="email">
+        <label className="mb-1 block text-sm text-black" htmlFor="email">
           Email
         </label>
         <input
@@ -32,11 +30,11 @@ export default async function LoginPage({
           type="email"
           required
           autoComplete="email"
-          className="mb-4 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-3 text-base text-neutral-100 outline-none focus:border-neutral-500"
+          className="mb-4 w-full border-2 border-black bg-background px-3 py-3 text-base outline-none"
         />
 
         <label
-          className="mb-1 block text-sm text-neutral-400"
+          className="mb-1 block text-sm text-black"
           htmlFor="password"
         >
           Password
@@ -47,12 +45,12 @@ export default async function LoginPage({
           type="password"
           required
           autoComplete="current-password"
-          className="mb-6 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-3 text-base text-neutral-100 outline-none focus:border-neutral-500"
+          className="mb-6 w-full border-2 border-black bg-background px-3 py-3 text-base outline-none"
         />
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-neutral-100 px-4 py-3 text-base font-medium text-neutral-900 active:bg-neutral-300"
+          className="w-full border-2 border-black bg-black px-4 py-3 text-base font-medium text-background active:bg-background active:text-black"
         >
           Log in
         </button>

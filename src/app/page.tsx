@@ -16,19 +16,21 @@ export default async function Home() {
     .returns<Day[]>();
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 bg-neutral-950 px-4 py-8 text-neutral-100">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 px-4 py-8">
+      <div className="flex items-center justify-between border-b-2 border-black pb-4">
         <h1 className="text-2xl font-semibold">Gym Bro</h1>
         <form action={logout}>
           <button
             type="submit"
-            className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-400 active:bg-neutral-800"
+            className="border-2 border-black px-3 py-1.5 text-xs font-medium active:bg-black active:text-background"
           >
             Log out
           </button>
         </form>
       </div>
-      <p className="-mt-4 text-sm text-neutral-500">{user?.email}</p>
+      <p className="-mt-4 text-sm text-black">
+        {user?.email ?? "auth bypassed — dev mode"}
+      </p>
 
       <div className="flex flex-col gap-3">
         {days && days.length > 0 ? (
@@ -36,13 +38,13 @@ export default async function Home() {
             <Link
               key={day.id}
               href={`/days/${day.id}`}
-              className="rounded-2xl bg-neutral-900 px-5 py-4 text-lg font-medium shadow active:bg-neutral-800"
+              className="border-2 border-black px-5 py-4 text-lg font-medium active:bg-black active:text-background"
             >
               {day.name}
             </Link>
           ))
         ) : (
-          <p className="text-neutral-500">
+          <p className="text-black">
             No days yet. Add one in Supabase to get started.
           </p>
         )}
