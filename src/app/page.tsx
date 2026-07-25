@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createRoutine, logout, moveRoutine } from "./actions";
+import { createRoutine, logout } from "./actions";
 import { routineLetter } from "@/lib/routine-letter";
 import type { Routine } from "@/lib/types";
 
@@ -47,46 +47,16 @@ export default async function Home({
       <div className="flex flex-col gap-3">
         {routines && routines.length > 0 ? (
           routines.map((routine, i) => (
-            <div
+            <Link
               key={routine.id}
-              className="border-foreground flex items-stretch border"
+              href={`/routines/${routine.id}`}
+              className="border-foreground flex flex-col justify-center gap-0.5 border px-5 py-4"
             >
-              <Link
-                href={`/routines/${routine.id}`}
-                className="flex flex-1 flex-col justify-center gap-0.5 px-5 py-4"
-              >
-                <span className="text-lg font-medium">
-                  {routineLetter(i)}
-                  {routine.label ? ` - ${routine.label}` : ""}
-                </span>
-              </Link>
-              <div className="border-foreground flex flex-col border-l">
-                <form action={moveRoutine} className="flex-1">
-                  <input type="hidden" name="id" value={routine.id} />
-                  <input type="hidden" name="direction" value="up" />
-                  <button
-                    type="submit"
-                    disabled={i === 0}
-                    aria-label="Move routine up"
-                    className="border-foreground active:bg-foreground active:text-background flex h-full w-10 items-center justify-center border-b disabled:opacity-30"
-                  >
-                    ↑
-                  </button>
-                </form>
-                <form action={moveRoutine} className="flex-1">
-                  <input type="hidden" name="id" value={routine.id} />
-                  <input type="hidden" name="direction" value="down" />
-                  <button
-                    type="submit"
-                    disabled={i === routines.length - 1}
-                    aria-label="Move routine down"
-                    className="active:bg-foreground active:text-background flex h-full w-10 items-center justify-center disabled:opacity-30"
-                  >
-                    ↓
-                  </button>
-                </form>
-              </div>
-            </div>
+              <span className="text-lg font-medium">
+                {routineLetter(i)}
+                {routine.label ? ` - ${routine.label}` : ""}
+              </span>
+            </Link>
           ))
         ) : (
           <p className="text-foreground">No routines yet — create one below.</p>
