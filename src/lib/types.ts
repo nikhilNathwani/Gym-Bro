@@ -4,32 +4,10 @@ export type Routine = {
   sort_order: number;
 };
 
-export type Cue = {
-  id: string;
-  text: string;
-  sort_order: number;
-  level: number;
-  is_header: boolean;
-};
-
 export type Exercise = {
   id: string;
   name: string;
   subtitle: string | null;
-};
-
-export type ExerciseWithCues = Exercise & {
-  cues: Cue[];
-};
-
-export type RoutineExercise = {
-  id: string;
-  sort_order: number;
-  exercise: Exercise;
-};
-
-export type RoutineDetail = Routine & {
-  routine_exercises: RoutineExercise[];
 };
 
 export type SetLog = {
@@ -46,6 +24,17 @@ export type ExerciseLog = {
   set_logs: SetLog[];
 };
 
-export type ExerciseDetail = ExerciseWithCues & {
+export type ExerciseDetail = Exercise & {
+  cues: string | null;
   exercise_logs: ExerciseLog[];
+};
+
+export type RoutineExercise = {
+  id: string;
+  sort_order: number;
+  exercise: ExerciseDetail;
+};
+
+export type RoutineDetail = Routine & {
+  routine_exercises: RoutineExercise[];
 };

@@ -6,6 +6,7 @@ export function DeleteRoutineButton({ routineId }: { routineId: string }) {
   return (
     <form
       action={deleteRoutine}
+      className="contents"
       onSubmit={(e) => {
         if (!confirm("Delete this routine? This cannot be undone.")) {
           e.preventDefault();
@@ -13,10 +14,7 @@ export function DeleteRoutineButton({ routineId }: { routineId: string }) {
       }}
     >
       <input type="hidden" name="id" value={routineId} />
-      <button
-        type="submit"
-        className="border-foreground active:bg-foreground active:text-background border px-3 py-1.5 text-xs font-medium"
-      >
+      <button type="submit" className="text-foreground text-xs underline">
         Delete routine
       </button>
     </form>

@@ -1,23 +1,27 @@
 import Link from "next/link";
+import { ArrowLeftIcon } from "@/components/icons";
 import { createExercise } from "../actions";
 
 export default async function NewExercisePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; routineId?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const { error, routineId } = await searchParams;
+  const { error } = await searchParams;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 px-4 py-8">
-      <div className="border-foreground flex items-center gap-3 border-b pb-4">
+      <div>
         <Link
-          href={routineId ? `/routines/${routineId}` : "/exercises"}
-          className="text-lg"
+          href="/exercises"
+          className="text-foreground flex items-center gap-1 pb-2 text-sm"
         >
-          ←
+          <ArrowLeftIcon className="h-4 w-4" />
+          All exercises
         </Link>
-        <h1 className="text-2xl">New exercise</h1>
+        <h1 className="border-foreground border-b pb-4 text-2xl">
+          New exercise
+        </h1>
       </div>
 
       {error && (
@@ -25,10 +29,6 @@ export default async function NewExercisePage({
       )}
 
       <form action={createExercise} className="flex flex-col gap-4">
-        {routineId && (
-          <input type="hidden" name="routineId" value={routineId} />
-        )}
-
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="name">
             Name

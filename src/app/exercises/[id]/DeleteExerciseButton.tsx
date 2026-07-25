@@ -6,6 +6,7 @@ export function DeleteExerciseButton({ exerciseId }: { exerciseId: string }) {
   return (
     <form
       action={deleteExercise}
+      className="contents"
       onSubmit={(e) => {
         if (
           !confirm(
@@ -17,10 +18,7 @@ export function DeleteExerciseButton({ exerciseId }: { exerciseId: string }) {
       }}
     >
       <input type="hidden" name="id" value={exerciseId} />
-      <button
-        type="submit"
-        className="border-foreground active:bg-foreground active:text-background border px-3 py-1.5 text-xs font-medium"
-      >
+      <button type="submit" className="text-foreground text-xs underline">
         Delete exercise
       </button>
     </form>

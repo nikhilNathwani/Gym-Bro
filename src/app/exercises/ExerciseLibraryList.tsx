@@ -28,11 +28,6 @@ export function ExerciseLibraryList({ exercises }: { exercises: Exercise[] }) {
               className="border-foreground active:bg-foreground active:text-background flex flex-col gap-0.5 border px-5 py-4"
             >
               <span className="text-lg font-medium">{exercise.name}</span>
-              {exercise.subtitle && (
-                <span className="text-foreground text-sm">
-                  {exercise.subtitle}
-                </span>
-              )}
             </Link>
           ))
         ) : (
