@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct GymBroSwiftSpikeApp: App {
+struct GymBroApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RoutinesListView()
         }
     }
 }

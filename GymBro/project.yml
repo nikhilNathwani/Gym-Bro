@@ -1,0 +1,48 @@
+name: GymBro
+options:
+  bundleIdPrefix: com.nikhilnathwani
+  deploymentTarget:
+    iOS: "17.0"
+configFiles:
+  Debug: Secrets.xcconfig
+  Release: Secrets.xcconfig
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: 2.53.0
+targets:
+  GymBro:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    dependencies:
+      - package: Supabase
+        product: Supabase
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        SupabaseURL: https://$(SUPABASE_HOST)
+        SupabaseAnonKey: $(SUPABASE_ANON_KEY)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymbro
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        DEVELOPMENT_TEAM: "5BWXZ738L7"
+        CODE_SIGN_STYLE: Automatic
+  GymBroUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - UITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymbro.uitests
+        SWIFT_VERSION: "5.0"
+        DEVELOPMENT_TEAM: "5BWXZ738L7"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: GymBro

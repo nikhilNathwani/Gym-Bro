@@ -20,5 +20,9 @@
 	<string>1</string>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>SupabaseURL</key>
+	<string>https://$(SUPABASE_HOST)</string>
+	<key>SupabaseAnonKey</key>
+	<string>$(SUPABASE_ANON_KEY)</string>
 </dict>
 </plist>

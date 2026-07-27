@@ -1,0 +1,549 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01068E93AA7EE45C4B95B1D2 /* GymBroSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */; };
+		1665054C69D9C1FA79E2EFBF /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8414F4B943A457E9797CE6E /* Theme.swift */; };
+		285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */; };
+		3126B370DC46079AB1900D33 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */; };
+		316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */; };
+		440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7703A8A07881F5692FE9A957 /* AppRoute.swift */; };
+		457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */; };
+		7579B6E2368562EFAF10BA61 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D0194362D4B87CCA67A634 /* Models.swift */; };
+		78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE44036007B45B296ABCA1 /* GymBroApp.swift */; };
+		8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35149503214E7AEC5C567893 /* NewExerciseView.swift */; };
+		8C1DE0ECEC546BAB2D7AB003 /* RoutineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */; };
+		8E575A8CB9BF947ABA747440 /* RoutinesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */; };
+		9B459AB6E02D1881DE1186EC /* AccordionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343B06E6E4A7F97749A5F14A /* AccordionCard.swift */; };
+		B484D37310886D001EA1DC5A /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5F0B24793216F6AB7DDF461E /* Supabase */; };
+		BC81AEB5C3C1DCCD56B1BBD7 /* NumericKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */; };
+		BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */; };
+		BF5E3E745C38531BB72F9684 /* RoutineLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */; };
+		C8954C74B7434F852E9FE1CA /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD229F1100E5DEC28467D5F /* Styles.swift */; };
+		CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */; };
+		EA73DAA28712ED5BC1C4B1EE /* SetFieldsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */; };
+		F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		550B41BAEFF3170FE7EC1222 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 81AF65F84AF2CDDD90C220B4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 880F96BE0B0D0E044B56C066;
+			remoteInfo = GymBro;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogEntryFormView.swift; sourceTree = "<group>"; };
+		23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroSmokeTests.swift; sourceTree = "<group>"; };
+		27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
+		2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		343B06E6E4A7F97749A5F14A /* AccordionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccordionCard.swift; sourceTree = "<group>"; };
+		35149503214E7AEC5C567893 /* NewExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewExerciseView.swift; sourceTree = "<group>"; };
+		597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
+		5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLibraryView.swift; sourceTree = "<group>"; };
+		6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSummaryView.swift; sourceTree = "<group>"; };
+		7703A8A07881F5692FE9A957 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
+		8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
+		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0D0194362D4B87CCA67A634 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineLetter.swift; sourceTree = "<group>"; };
+		B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineDetailView.swift; sourceTree = "<group>"; };
+		B81E1D26EC49432B7163E853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDD229F1100E5DEC28467D5F /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetFieldsEditor.swift; sourceTree = "<group>"; };
+		DCBE44036007B45B296ABCA1 /* GymBroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroApp.swift; sourceTree = "<group>"; };
+		EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryEntryView.swift; sourceTree = "<group>"; };
+		F8414F4B943A457E9797CE6E /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3434BED229ECB78B62959A6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B484D37310886D001EA1DC5A /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0DCBC2225F9C5FA3947357E7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				90052BCC0E3A87460DB29661 /* GymBro.app */,
+				C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		24D316209E8C634361A65145 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7703A8A07881F5692FE9A957 /* AppRoute.swift */,
+				597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */,
+				5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */,
+				35149503214E7AEC5C567893 /* NewExerciseView.swift */,
+				B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */,
+				7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		29B5D283C48C82AB6A7479DE = {
+			isa = PBXGroup;
+			children = (
+				FCC2F96ECFAE62138466F407 /* GymBro */,
+				D9D50EC7FA69D9E7CE42F203 /* Sources */,
+				42D981DCB336E3E93112A786 /* UITests */,
+				0DCBC2225F9C5FA3947357E7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		306674D8113205DC778C799C /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				A0D0194362D4B87CCA67A634 /* Models.swift */,
+				B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */,
+				2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		42D981DCB336E3E93112A786 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		675D6D5EBAED5464934CEFC6 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				343B06E6E4A7F97749A5F14A /* AccordionCard.swift */,
+				8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */,
+				EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */,
+				1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */,
+				6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */,
+				27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */,
+				D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */,
+				CDD229F1100E5DEC28467D5F /* Styles.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		D9D50EC7FA69D9E7CE42F203 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				DCBE44036007B45B296ABCA1 /* GymBroApp.swift */,
+				B81E1D26EC49432B7163E853 /* Info.plist */,
+				F8414F4B943A457E9797CE6E /* Theme.swift */,
+				675D6D5EBAED5464934CEFC6 /* Components */,
+				306674D8113205DC778C799C /* Data */,
+				24D316209E8C634361A65145 /* Views */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		FCC2F96ECFAE62138466F407 /* GymBro */ = {
+			isa = PBXGroup;
+			children = (
+				A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */,
+			);
+			name = GymBro;
+			path = .;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		47872A12F3A7B305B5BB007C /* GymBroUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymBroUITests" */;
+			buildPhases = (
+				08D27791AB5E453E107D0C7F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				67FB1D3D77458C12C9AECE5A /* PBXTargetDependency */,
+			);
+			name = GymBroUITests;
+			packageProductDependencies = (
+			);
+			productName = GymBroUITests;
+			productReference = C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		880F96BE0B0D0E044B56C066 /* GymBro */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */;
+			buildPhases = (
+				2829CBF22D8A2F1608698F54 /* Sources */,
+				3434BED229ECB78B62959A6C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GymBro;
+			packageProductDependencies = (
+				5F0B24793216F6AB7DDF461E /* Supabase */,
+			);
+			productName = GymBro;
+			productReference = 90052BCC0E3A87460DB29661 /* GymBro.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		81AF65F84AF2CDDD90C220B4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					47872A12F3A7B305B5BB007C = {
+						DevelopmentTeam = 5BWXZ738L7;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 880F96BE0B0D0E044B56C066;
+					};
+					880F96BE0B0D0E044B56C066 = {
+						DevelopmentTeam = 5BWXZ738L7;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 29B5D283C48C82AB6A7479DE;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				711DB0CCB1B41F94608F0C00 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0DCBC2225F9C5FA3947357E7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				880F96BE0B0D0E044B56C066 /* GymBro */,
+				47872A12F3A7B305B5BB007C /* GymBroUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		08D27791AB5E453E107D0C7F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01068E93AA7EE45C4B95B1D2 /* GymBroSmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2829CBF22D8A2F1608698F54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B459AB6E02D1881DE1186EC /* AccordionCard.swift in Sources */,
+				440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */,
+				F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */,
+				285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */,
+				BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */,
+				78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */,
+				457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */,
+				CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */,
+				316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */,
+				7579B6E2368562EFAF10BA61 /* Models.swift in Sources */,
+				8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */,
+				BC81AEB5C3C1DCCD56B1BBD7 /* NumericKeypadView.swift in Sources */,
+				8C1DE0ECEC546BAB2D7AB003 /* RoutineDetailView.swift in Sources */,
+				BF5E3E745C38531BB72F9684 /* RoutineLetter.swift in Sources */,
+				8E575A8CB9BF947ABA747440 /* RoutinesListView.swift in Sources */,
+				EA73DAA28712ED5BC1C4B1EE /* SetFieldsEditor.swift in Sources */,
+				C8954C74B7434F852E9FE1CA /* Styles.swift in Sources */,
+				3126B370DC46079AB1900D33 /* SupabaseService.swift in Sources */,
+				1665054C69D9C1FA79E2EFBF /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		67FB1D3D77458C12C9AECE5A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 880F96BE0B0D0E044B56C066 /* GymBro */;
+			targetProxy = 550B41BAEFF3170FE7EC1222 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		032F31A760A01EED3667D97C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		082A46D529A2F37033EE3BCE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GymBro;
+			};
+			name = Release;
+		};
+		24918BE2D0F03E7CBAE7F13B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A0B7CE9931158004A65EE87A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GymBro;
+			};
+			name = Debug;
+		};
+		DE977F642EB8DBB75805CB64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				INFOPLIST_FILE = Sources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		EBC364C2D9330AF2E7F239E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				032F31A760A01EED3667D97C /* Debug */,
+				EBC364C2D9330AF2E7F239E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymBroUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0B7CE9931158004A65EE87A /* Debug */,
+				082A46D529A2F37033EE3BCE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				24918BE2D0F03E7CBAE7F13B /* Debug */,
+				DE977F642EB8DBB75805CB64 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		711DB0CCB1B41F94608F0C00 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.53.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5F0B24793216F6AB7DDF461E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 711DB0CCB1B41F94608F0C00 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 81AF65F84AF2CDDD90C220B4 /* Project object */;
+}
