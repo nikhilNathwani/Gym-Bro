@@ -102,34 +102,40 @@ struct WorkoutSessionView: View {
     // Next is disabled (not hidden behind a separate "Finish" action) on the
     // last exercise — exiting the session is always the toolbar's "Done"
     // button, so a distinct Finish button/style wasn't adding anything.
+    //
+    // Text-only, not filled/bordered pills — this is secondary paging nav
+    // (closer to Mail's thread prev/next links), and the previous bordered
+    // buttons read as a second hero control competing with the actual
+    // logging inputs above them.
     private var navBar: some View {
-        HStack(spacing: 12) {
+        HStack {
             Button {
                 withAnimation(.snappy(duration: 0.2)) { currentIndex -= 1 }
             } label: {
                 Label("Previous", systemImage: "chevron.left")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+                    .font(.subheadline.weight(.semibold))
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.plain)
+            .foregroundStyle(currentIndex == 0 ? Color(.tertiaryLabel) : Color.accentColor)
             .disabled(currentIndex == 0)
             .accessibilityIdentifier("previousExerciseButton")
+
+            Spacer()
 
             Button {
                 withAnimation(.snappy(duration: 0.2)) { currentIndex += 1 }
             } label: {
-                HStack {
+                HStack(spacing: 4) {
                     Text("Next")
                     Image(systemName: "chevron.right")
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+                .font(.subheadline.weight(.semibold))
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.plain)
+            .foregroundStyle(currentIndex == exercises.count - 1 ? Color(.tertiaryLabel) : Color.accentColor)
             .disabled(currentIndex == exercises.count - 1)
             .accessibilityIdentifier("nextExerciseButton")
         }
-        .controlSize(.large)
     }
 
     // MARK: - Data
