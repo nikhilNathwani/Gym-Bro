@@ -110,6 +110,25 @@ final class GymBroSmokeTests: XCTestCase {
         XCTAssertTrue(reachedTitle.isHittable, "Matched exercise title isn't actually visible on screen")
         screenshot("02b-reached-new-exercise")
 
+        // 2c. Swipe left/right over the reference area as a Prev/Next
+        // shortcut. We're on the last exercise, so swipe-left (Next) must
+        // be a no-op; swipe-right moves to Previous; swipe-left again
+        // returns to this same exercise.
+        app.swipeLeft()
+        sleep(1)
+        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Swiping past the last exercise should be a no-op")
+
+        app.swipeRight()
+        sleep(1)
+        XCTAssertFalse(app.staticTexts[exerciseName].exists, "Swipe-right should move to the previous exercise")
+
+        app.swipeLeft()
+        sleep(1)
+        XCTAssertTrue(
+            app.staticTexts[exerciseName].waitForExistence(timeout: 5),
+            "Swipe-left should return to the new exercise")
+        screenshot("02c-after-swipe")
+
         // 3. Log a set via the stepper controls, driven by identifiers keyed
         // by set number (stable regardless of persistence state). Nudging
         // weight/reps lazily creates today's exercise_log on first touch.

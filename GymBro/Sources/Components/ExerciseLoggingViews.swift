@@ -119,8 +119,8 @@ struct ExerciseLoggingDock: View {
                 Text("REPS")
                     .frame(maxWidth: .infinity)
             }
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.secondary)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.primary)
 
             VStack(spacing: 6) {
                 ForEach(controller.sets) { set in
@@ -134,8 +134,8 @@ struct ExerciseLoggingDock: View {
 
             VStack(alignment: .leading, spacing: 5) {
                 Text("NOTES")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.primary)
                 notesField
             }
         }
@@ -168,7 +168,7 @@ struct ExerciseLoggingDock: View {
         HStack(spacing: 6) {
             Text("\(set.setNumber)")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
                 .frame(width: 34, alignment: .leading)
 
             numericStepper(

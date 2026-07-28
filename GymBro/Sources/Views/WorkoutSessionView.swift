@@ -83,6 +83,32 @@ struct WorkoutSessionView: View {
                 }
                 .padding(16)
             }
+            // Swipe left/right over the reference area as a shortcut for
+            // Next/Previous — `simultaneousGesture` (not `gesture`) so it
+            // doesn't steal the ScrollView's own vertical pan, and it only
+            // acts once a drag is clearly more horizontal than vertical, so
+            // a normal scroll attempt never accidentally pages an exercise.
+            // Scoped to this scrollable area only, not the input dock below
+            // — swiping over a text field or stepper should stay text-field/
+            // stepper behavior, not page navigation. Ignores drags starting
+            // near the left edge, since that's also where the system's own
+            // interactive swipe-to-go-back gesture lives — without this, a
+            // right-swipe there could simultaneously page to Previous *and*
+            // pop the screen.
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 24)
+                    .onEnded { value in
+                        guard value.startLocation.x > 40 else { return }
+                        let horizontal = value.translation.width
+                        let vertical = value.translation.height
+                        guard abs(horizontal) > abs(vertical), abs(horizontal) > 60 else { return }
+                        if horizontal < 0 {
+                            goToNext()
+                        } else {
+                            goToPrevious()
+                        }
+                    }
+            )
             // One unified block for everything the user actually interacts
             // with (steppers, notes, Prev/Next) — a solid purple tray with
             // rounded top corners, rising from the bottom of the screen
@@ -127,9 +153,7 @@ struct WorkoutSessionView: View {
     // logging inputs above them.
     private var navBar: some View {
         HStack {
-            Button {
-                withAnimation(.snappy(duration: 0.2)) { currentIndex -= 1 }
-            } label: {
+            Button(action: goToPrevious) {
                 Label("Previous", systemImage: "chevron.left")
                     .font(.subheadline.weight(.semibold))
             }
@@ -140,9 +164,7 @@ struct WorkoutSessionView: View {
 
             Spacer()
 
-            Button {
-                withAnimation(.snappy(duration: 0.2)) { currentIndex += 1 }
-            } label: {
+            Button(action: goToNext) {
                 HStack(spacing: 4) {
                     Text("Next")
                     Image(systemName: "chevron.right")
@@ -154,6 +176,16 @@ struct WorkoutSessionView: View {
             .disabled(currentIndex == exercises.count - 1)
             .accessibilityIdentifier("nextExerciseButton")
         }
+    }
+
+    private func goToPrevious() {
+        guard currentIndex > 0 else { return }
+        withAnimation(.snappy(duration: 0.2)) { currentIndex -= 1 }
+    }
+
+    private func goToNext() {
+        guard currentIndex < exercises.count - 1 else { return }
+        withAnimation(.snappy(duration: 0.2)) { currentIndex += 1 }
     }
 
     // MARK: - Data
