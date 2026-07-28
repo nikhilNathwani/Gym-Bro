@@ -27,8 +27,6 @@ struct WorkoutSessionView: View {
     @State private var errorMessage: String?
     @State private var controller: ExerciseLogController?
 
-    @Environment(\.dismiss) private var dismiss
-
     init(routineId: UUID, startIndex: Int) {
         self.routineId = routineId
         self.startIndex = startIndex
@@ -52,6 +50,12 @@ struct WorkoutSessionView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        // No trailing "Done" button — this screen is pushed (not
+        // presented as a sheet), so it already has the standard back
+        // chevron, which does exactly the same dismiss. Having both read as
+        // two exit affordances doing the same thing; the back chevron also
+        // keeps the system's interactive swipe-to-go-back gesture working,
+        // which `.navigationBarBackButtonHidden` would have disabled.
         .toolbar {
             ToolbarItem(placement: .principal) {
                 if !exercises.isEmpty {
@@ -60,9 +64,6 @@ struct WorkoutSessionView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") { dismiss() }
-            }
         }
         .task { await load() }
         // Only re-creates the controller when moving to a different
@@ -70,6 +71,9 @@ struct WorkoutSessionView: View {
         // exercise's own logging (onLogged) must NOT reset it, or the user
         // would lose whatever they're mid-editing.
         .onChange(of: currentIndex) { _, _ in setUpController() }
+        // Covers Prev/Next buttons and the swipe gesture in one place,
+        // since both just mutate currentIndex.
+        .sensoryFeedback(.selection, trigger: currentIndex)
         .errorAlert($errorMessage)
     }
 
@@ -144,8 +148,8 @@ struct WorkoutSessionView: View {
     }
 
     // Next is disabled (not hidden behind a separate "Finish" action) on the
-    // last exercise — exiting the session is always the toolbar's "Done"
-    // button, so a distinct Finish button/style wasn't adding anything.
+    // last exercise — exiting the session is always the back chevron, so a
+    // distinct Finish button/style wasn't adding anything.
     //
     // Text-only, not filled/bordered pills — this is secondary paging nav
     // (closer to Mail's thread prev/next links), and the previous bordered

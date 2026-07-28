@@ -4,17 +4,18 @@ import SwiftUI
 ///
 /// A single native List for both view and edit states, toggled by the
 /// standard `EditButton()` — replacing the web's explicit up/down arrow
-/// buttons with iOS drag-to-reorder/swipe-to-delete. This is a plain
-/// browse/organize list — tapping a row (outside edit mode) pushes straight
-/// to that exercise's full page (cues, history, editing). Actual logging
-/// happens in `WorkoutSessionView`, reached via the "Start Workout" button:
-/// a full-screen one-exercise-at-a-time flow with Prev/Next, because the
-/// user only ever logs one exercise at a time and an inline accordion here
-/// added scrolling/tapping without adding any benefit. (An earlier revision
-/// of this screen had an inline accordion — see git history/
-/// INLINE_LOGGING_HANDOFF.md — replaced after user feedback that it didn't
-/// solve the actual complaint, plus a real bug where any NavigationLink
-/// nested in a List row makes the *whole row* tappable-through to that link.)
+/// buttons with iOS drag-to-reorder/swipe-to-delete. Tapping a row (outside
+/// edit mode) pushes straight into `WorkoutSessionView` at that exercise's
+/// position, not the full exercise-detail/edit page — this list exists in a
+/// "workout" context (it's the screen "Start Workout" lives on), so tapping
+/// an exercise should mean "let me log this one," not "let me edit its
+/// name/cues." The full edit page is still reachable via "Open full
+/// exercise page" from within the workout flow, or from the Exercises tab.
+/// (An earlier revision of this screen had an inline accordion — see git
+/// history/INLINE_LOGGING_HANDOFF.md — replaced after user feedback that it
+/// didn't solve the actual complaint, plus a real bug where any
+/// NavigationLink nested in a List row makes the *whole row*
+/// tappable-through to that link.)
 struct RoutineDetailView: View {
     let routineId: UUID
     @Binding var addExerciseTrigger: Bool
@@ -28,6 +29,7 @@ struct RoutineDetailView: View {
     @State private var showAddExercise = false
     @State private var pendingRemoveOffsets: IndexSet?
     @State private var errorMessage: String?
+    @State private var destructiveActionTaken = false
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.editMode) private var editMode
@@ -61,8 +63,8 @@ struct RoutineDetailView: View {
                             Text("No exercises yet — tap + to add one.")
                                 .foregroundStyle(.secondary)
                         } else {
-                            ForEach(routine.routineExercises) { entry in
-                                exerciseRow(entry.exercise)
+                            ForEach(Array(routine.routineExercises.enumerated()), id: \.element.id) { index, entry in
+                                exerciseRow(entry.exercise, startIndex: index)
                             }
                             .onDelete { offsets in pendingRemoveOffsets = offsets }
                             .onMove { source, destination in
@@ -80,6 +82,17 @@ struct RoutineDetailView: View {
                             // empty-label NavigationLink pushing the same
                             // destination, layered underneath, still
                             // navigates without that disclosure indicator.
+                            //
+                            // Deliberately no extra tap gesture here for
+                            // haptic feedback (tried `.simultaneousGesture`
+                            // layered on top to fire one) — it broke the
+                            // invisible NavigationLink's own tap recognition
+                            // outright, silently leaving the app on this
+                            // same screen instead of navigating. This
+                            // ZStack/opacity trick is already a delicate
+                            // workaround; not worth compounding the fragility
+                            // for a cosmetic haptic on what's still, at its
+                            // core, a plain navigation push.
                             ZStack {
                                 NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
                                     EmptyView()
@@ -132,7 +145,10 @@ struct RoutineDetailView: View {
             isPresented: $showDeleteConfirm,
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) { Task { await deleteRoutine() } }
+            Button("Delete", role: .destructive) {
+                destructiveActionTaken.toggle()
+                Task { await deleteRoutine() }
+            }
         }
         .confirmationDialog(
             "Remove this exercise from the routine?",
@@ -143,11 +159,13 @@ struct RoutineDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Remove", role: .destructive) {
+                destructiveActionTaken.toggle()
                 if let offsets = pendingRemoveOffsets, let routine {
                     Task { await removeExercises(at: offsets, routine: routine) }
                 }
             }
         }
+        .sensoryFeedback(.warning, trigger: destructiveActionTaken)
         .onChange(of: isEditing) { wasEditing, editing in
             if editing {
                 titleDraft = routine.map(displayName) ?? ""
@@ -186,9 +204,11 @@ struct RoutineDetailView: View {
     // Shows what's already logged today directly under the exercise name —
     // more informative than a bare checkmark (which only says "something
     // was logged," not what), and doubles as confirmation of what's about
-    // to be saved without having to open the exercise.
-    private func exerciseRow(_ exercise: ExerciseDetail) -> some View {
-        NavigationLink(value: AppRoute.exercise(exercise.id)) {
+    // to be saved without having to open the exercise. Tapping the row
+    // jumps straight into the workout flow at this exercise's position
+    // (not the full edit page — see the type doc comment above).
+    private func exerciseRow(_ exercise: ExerciseDetail, startIndex: Int) -> some View {
+        NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: startIndex)) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(exercise.name)
                     .foregroundStyle(.primary)

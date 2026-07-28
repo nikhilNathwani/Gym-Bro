@@ -76,41 +76,21 @@ final class GymBroSmokeTests: XCTestCase {
         sleep(1)
         screenshot("01c-exercise-added")
 
-        // 2. "Start Workout"/"Continue Workout" -> full-screen
-        // one-exercise-at-a-time flow (see WorkoutSessionView), landing on
-        // the routine's first exercise. Not an exact match on "Start
-        // Workout" — this routine has a real logged set today already (the
-        // intentional Seated Dumbbell demo entry), so the button reads
-        // "Continue Workout" here, not "Start Workout". The one we just
-        // created is appended last (highest sort_order), so page forward
-        // with Next until it's reached rather than assuming a fixed
-        // exercise count.
-        waitAndTap("Workout")
+        // 2. Tapping the exercise row itself now jumps straight into the
+        // workout flow AT that exercise (WorkoutSessionView with
+        // startIndex set to this row's position) instead of the old full
+        // edit page — exercises that specific behavior directly, rather
+        // than only ever entering via Start/Continue Workout (startIndex 0)
+        // and paging with Next to reach a non-first exercise.
+        waitAndTap(exerciseName)
         screenshot("02-workout-session-start")
 
-        // "Next" always exists now (it just disables on the last exercise,
-        // there's no separate "Finish" button/state) — page forward while
-        // it's still enabled rather than by existence.
-        var advanceGuard = 0
-        while advanceGuard < 20 {
-            let next = app.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier == %@", "nextExerciseButton"))
-                .firstMatch
-            // waitForExistence (not a bare .exists) on every iteration —
-            // the session's routine data loads asynchronously, so an
-            // immediate check on the first loop iteration can race ahead of
-            // it and quit before the button ever renders, silently leaving
-            // the test stuck on the first (real, non-disposable) exercise.
-            guard next.waitForExistence(timeout: 5), next.isEnabled else { break }
-            next.tap()
-            advanceGuard += 1
-        }
         // Also checks isHittable, not just existence — the covered routine
         // list screen underneath can still expose a matching row's text to
         // element queries even while off-screen, which would otherwise let
         // this assertion pass without actually verifying what's visible.
         let reachedTitle = app.staticTexts[exerciseName].firstMatch
-        XCTAssertTrue(reachedTitle.waitForExistence(timeout: 5), "Did not page to the new exercise")
+        XCTAssertTrue(reachedTitle.waitForExistence(timeout: 5), "Tapping the row did not land on that exercise")
         XCTAssertTrue(reachedTitle.isHittable, "Matched exercise title isn't actually visible on screen")
         screenshot("02b-reached-new-exercise")
 
@@ -147,9 +127,10 @@ final class GymBroSmokeTests: XCTestCase {
         // 3a-pre. Tapping into the weight field brings up the native
         // keyboard — it should cover the content from the bottom, not push
         // the Previous/Next bar up to stay visible above it. Dismiss via
-        // the keyboard's own accessory "Done" (app.toolbars, not
-        // app.navigationBars) — the session's own "Done" (exit) button has
-        // the same label and would be ambiguous with a generic search.
+        // the keyboard's own accessory "Done" (app.toolbars, not a generic
+        // search — scoping to the keyboard toolbar specifically is what
+        // makes this reliable regardless of what other "Done"-labeled
+        // controls might exist elsewhere on screen).
         tapId("weight-1-field")
         sleep(1)
         screenshot("03a-pre-keyboard-open")
@@ -201,11 +182,13 @@ final class GymBroSmokeTests: XCTestCase {
         screenshot("05-name-edited")
 
         // Back to the workout session (single pop within the same
-        // NavigationStack), then "Done" to exit the session back to the
-        // routine's plain list.
+        // NavigationStack), then back again to exit the session to the
+        // routine's plain list. No separate "Done" button anymore — this
+        // screen is pushed, not presented as a sheet, so the standard back
+        // chevron is the only exit affordance now (see WorkoutSessionView).
         app.navigationBars.buttons.element(boundBy: 0).tap()
         sleep(1)
-        waitAndTap("Done", exact: true)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
         sleep(1)
         // The button relabels to "Continue Workout" once today has any
         // logged sets in the routine, and the exercise row shows an inline
@@ -219,6 +202,20 @@ final class GymBroSmokeTests: XCTestCase {
             "Start Workout should relabel to Continue Workout once something's logged today")
         XCTAssertTrue(app.staticTexts["5×1"].waitForExistence(timeout: 5), "Missing inline logged-sets preview in the list")
         screenshot("06-logged-preview-in-list")
+
+        // 4b. The Start/Continue Workout button is a separate entry point
+        // (always startIndex 0) from tapping a row directly — confirm it
+        // still navigates correctly too, now that step 2 no longer
+        // exercises it.
+        waitAndTap("Workout")
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "previousExerciseButton"))
+                .firstMatch.waitForExistence(timeout: 5),
+            "Continue Workout button did not navigate into the workout flow")
+        screenshot("06b-continue-workout-button")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        sleep(1)
 
         // 5. Edit mode: native List with delete/reorder controls, the
         // inline logged preview should still show there too.

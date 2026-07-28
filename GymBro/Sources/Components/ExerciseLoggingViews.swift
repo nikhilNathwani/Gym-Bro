@@ -28,6 +28,7 @@ struct ExerciseReferenceSection: View {
 
             openFullPageLink
         }
+        .sensoryFeedback(.selection, trigger: controller.isCuesExpanded)
     }
 
     private func lastTimeSection(_ log: ExerciseLog) -> some View {
@@ -155,6 +156,10 @@ struct ExerciseLoggingDock: View {
                 }
             }
         }
+        // Covers both "Add set" and the per-row delete — both change the
+        // set count, and matching the stepper buttons' own light-impact
+        // feel keeps the whole dock's haptic language consistent.
+        .sensoryFeedback(.impact(weight: .light), trigger: controller.sets.count)
     }
 
     // Looks up the row's *current* index by id on every access rather than
