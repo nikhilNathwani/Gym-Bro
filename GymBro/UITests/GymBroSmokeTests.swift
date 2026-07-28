@@ -92,11 +92,22 @@ final class GymBroSmokeTests: XCTestCase {
             let next = app.descendants(matching: .any)
                 .matching(NSPredicate(format: "identifier == %@", "nextExerciseButton"))
                 .firstMatch
-            guard next.exists, next.isEnabled else { break }
+            // waitForExistence (not a bare .exists) on every iteration —
+            // the session's routine data loads asynchronously, so an
+            // immediate check on the first loop iteration can race ahead of
+            // it and quit before the button ever renders, silently leaving
+            // the test stuck on the first (real, non-disposable) exercise.
+            guard next.waitForExistence(timeout: 5), next.isEnabled else { break }
             next.tap()
             advanceGuard += 1
         }
-        XCTAssertTrue(app.staticTexts[exerciseName].waitForExistence(timeout: 5), "Did not page to the new exercise")
+        // Also checks isHittable, not just existence — the covered routine
+        // list screen underneath can still expose a matching row's text to
+        // element queries even while off-screen, which would otherwise let
+        // this assertion pass without actually verifying what's visible.
+        let reachedTitle = app.staticTexts[exerciseName].firstMatch
+        XCTAssertTrue(reachedTitle.waitForExistence(timeout: 5), "Did not page to the new exercise")
+        XCTAssertTrue(reachedTitle.isHittable, "Matched exercise title isn't actually visible on screen")
         screenshot("02b-reached-new-exercise")
 
         // 3. Log a set via the stepper controls, driven by identifiers keyed

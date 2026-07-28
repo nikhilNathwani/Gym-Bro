@@ -15,7 +15,6 @@
 		316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */; };
 		440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7703A8A07881F5692FE9A957 /* AppRoute.swift */; };
 		457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */; };
-		4B141AC09D6F3E6D0216CEAA /* InlineExerciseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */; };
 		7579B6E2368562EFAF10BA61 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D0194362D4B87CCA67A634 /* Models.swift */; };
 		78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE44036007B45B296ABCA1 /* GymBroApp.swift */; };
 		8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35149503214E7AEC5C567893 /* NewExerciseView.swift */; };
@@ -28,6 +27,8 @@
 		BF5E3E745C38531BB72F9684 /* RoutineLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */; };
 		C8954C74B7434F852E9FE1CA /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD229F1100E5DEC28467D5F /* Styles.swift */; };
 		CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */; };
+		DA347365A056C60DDB745387 /* ExerciseLogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 351241EC06DA2B4E9128D348 /* ExerciseLogController.swift */; };
+		DEF0FFE07608567B5296300E /* ExerciseLoggingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1B72EEE0D9725A5360963C /* ExerciseLoggingViews.swift */; };
 		E39AF1B591BAE84E7034F34A /* AddExerciseToRoutineSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */; };
 		EA73DAA28712ED5BC1C4B1EE /* SetFieldsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */; };
 		F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */; };
@@ -48,6 +49,7 @@
 		23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroSmokeTests.swift; sourceTree = "<group>"; };
 		27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
 		2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		351241EC06DA2B4E9128D348 /* ExerciseLogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLogController.swift; sourceTree = "<group>"; };
 		35149503214E7AEC5C567893 /* NewExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewExerciseView.swift; sourceTree = "<group>"; };
 		4435749C212034449DA160C9 /* WorkoutSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionView.swift; sourceTree = "<group>"; };
 		556ACE6462B2C1240D04C4D9 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
@@ -59,9 +61,9 @@
 		7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
 		8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
 		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C1B72EEE0D9725A5360963C /* ExerciseLoggingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLoggingViews.swift; sourceTree = "<group>"; };
 		A0D0194362D4B87CCA67A634 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
-		AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineExerciseCard.swift; sourceTree = "<group>"; };
 		B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineLetter.swift; sourceTree = "<group>"; };
 		B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineDetailView.swift; sourceTree = "<group>"; };
 		B81E1D26EC49432B7163E853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -142,8 +144,9 @@
 			children = (
 				C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */,
 				8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */,
+				351241EC06DA2B4E9128D348 /* ExerciseLogController.swift */,
+				9C1B72EEE0D9725A5360963C /* ExerciseLoggingViews.swift */,
 				EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */,
-				AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */,
 				1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */,
 				6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */,
 				27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */,
@@ -288,9 +291,10 @@
 				F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */,
 				285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */,
 				BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */,
+				DA347365A056C60DDB745387 /* ExerciseLogController.swift in Sources */,
+				DEF0FFE07608567B5296300E /* ExerciseLoggingViews.swift in Sources */,
 				78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */,
 				457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */,
-				4B141AC09D6F3E6D0216CEAA /* InlineExerciseCard.swift in Sources */,
 				CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */,
 				316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */,
 				7579B6E2368562EFAF10BA61 /* Models.swift in Sources */,

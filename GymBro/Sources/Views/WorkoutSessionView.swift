@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// Full-screen, one-exercise-at-a-time logging flow — reached from
 /// `RoutineDetailView`'s "Start Workout" button.
@@ -8,11 +7,16 @@ import UIKit
 /// the user only ever logs one exercise at a time in the gym, so expanding
 /// exercises in place (still requiring the same amount of scrolling/tapping
 /// to get to the next one) didn't actually solve anything. Here the current
-/// exercise takes the whole screen and Prev/Next page between exercises —
-/// reuses `InlineExerciseCard` for the actual last-time/stepper/notes/cues
-/// content unchanged, since that content and its lazy-log-creation
-/// persistence model are correct as-is; only the surrounding container
-/// (full-screen page vs. List row) changes.
+/// exercise takes the whole screen and Prev/Next page between exercises.
+///
+/// The screen is split into two independent regions sharing one
+/// `ExerciseLogController`: read-only reference material (title, target,
+/// last time, cues, open-full-page link) scrolls independently at the top,
+/// while the actual input controls — set steppers, notes, and Prev/Next —
+/// are collocated in one fixed dock at the bottom. The user only ever
+/// interacts with one exercise's inputs at a time and asked for those
+/// controls (plus the nav to move between exercises) to read as a single
+/// widget rather than being separated by whatever's currently scrolled.
 struct WorkoutSessionView: View {
     let routineId: UUID
     let startIndex: Int
@@ -21,11 +25,7 @@ struct WorkoutSessionView: View {
     @State private var isLoading = true
     @State private var currentIndex: Int
     @State private var errorMessage: String?
-    // Hides the Prev/Next bar while the system keyboard (from tapping into a
-    // stepper's weight/reps field) is up — the keyboard should simply cover
-    // the content from the bottom, not have the nav bar ride up and stay
-    // visible/tappable above it.
-    @State private var isKeyboardVisible = false
+    @State private var controller: ExerciseLogController?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -41,12 +41,14 @@ struct WorkoutSessionView: View {
 
     var body: some View {
         Group {
-            if isLoading && routine == nil {
+            if let controller {
+                page(controller)
+            } else if isLoading {
                 ProgressView()
             } else if exercises.isEmpty {
                 ContentUnavailableView("No Exercises", systemImage: "exclamationmark.triangle")
             } else {
-                content
+                ProgressView()
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -63,32 +65,32 @@ struct WorkoutSessionView: View {
             }
         }
         .task { await load() }
+        // Only re-creates the controller when moving to a different
+        // exercise (Prev/Next) — a `reload()` triggered by that same
+        // exercise's own logging (onLogged) must NOT reset it, or the user
+        // would lose whatever they're mid-editing.
+        .onChange(of: currentIndex) { _, _ in setUpController() }
         .errorAlert($errorMessage)
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            isKeyboardVisible = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            isKeyboardVisible = false
-        }
     }
 
-    private var content: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(exercises[currentIndex].name)
-                    .font(.title.bold())
-                InlineExerciseCard(
-                    exercise: exercises[currentIndex],
-                    onLogged: { await reload() },
-                    onError: { errorMessage = $0 }
-                )
+    private func page(_ controller: ExerciseLogController) -> some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(exercises[currentIndex].name)
+                        .font(.title.bold())
+                    ExerciseReferenceSection(controller: controller)
+                }
+                .padding(16)
             }
-            .padding(16)
-        }
-        .safeAreaInset(edge: .bottom) {
-            if !isKeyboardVisible {
+            Divider()
+            VStack(spacing: 10) {
+                ExerciseLoggingDock(controller: controller)
                 navBar
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.bar)
         }
     }
 
@@ -123,9 +125,6 @@ struct WorkoutSessionView: View {
             .accessibilityIdentifier("nextExerciseButton")
         }
         .controlSize(.large)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.bar)
     }
 
     // MARK: - Data
@@ -137,6 +136,7 @@ struct WorkoutSessionView: View {
             if let detail = try await SupabaseService.shared.fetchRoutineDetail(id: routineId) {
                 routine = detail
                 currentIndex = min(currentIndex, max(0, detail.routineExercises.count - 1))
+                setUpController()
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -152,5 +152,17 @@ struct WorkoutSessionView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func setUpController() {
+        guard currentIndex < exercises.count else {
+            controller = nil
+            return
+        }
+        controller = ExerciseLogController(
+            exercise: exercises[currentIndex],
+            onLogged: { await reload() },
+            onError: { errorMessage = $0 }
+        )
     }
 }
