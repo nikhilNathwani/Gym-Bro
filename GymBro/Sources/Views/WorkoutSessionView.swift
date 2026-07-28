@@ -84,13 +84,18 @@ struct WorkoutSessionView: View {
                 .padding(16)
             }
             Divider()
+            // One unified accent-tinted block for everything the user
+            // actually interacts with (steppers, notes, Prev/Next) — this
+            // used to be an accent-tinted box nested inside a separate grey
+            // `.bar` box, which read as "a unit inside a unit" rather than
+            // one contiguous control surface.
             VStack(spacing: 10) {
                 ExerciseLoggingDock(controller: controller)
                 navBar
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(.bar)
+            .background(Color.accentColor.opacity(0.12))
         }
     }
 

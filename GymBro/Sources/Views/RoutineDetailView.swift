@@ -73,7 +73,19 @@ struct RoutineDetailView: View {
 
                     if !routine.routineExercises.isEmpty && !isEditing {
                         Section {
-                            NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
+                            // The visible content is a plain Label, not a
+                            // NavigationLink's own label — List only draws
+                            // the automatic trailing chevron for a row whose
+                            // *primary* content is a NavigationLink, so an
+                            // empty-label NavigationLink pushing the same
+                            // destination, layered underneath, still
+                            // navigates without that disclosure indicator.
+                            ZStack {
+                                NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
+                                    EmptyView()
+                                }
+                                .opacity(0)
+
                                 Label("Start Workout", systemImage: "play.fill")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity, alignment: .center)

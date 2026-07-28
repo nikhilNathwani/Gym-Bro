@@ -114,7 +114,8 @@ struct ExerciseLoggingDock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                Spacer().frame(width: 34)
+                Text("SET")
+                    .frame(width: 34, alignment: .leading)
                 Text("WEIGHT")
                     .frame(maxWidth: .infinity)
                 Text("REPS")
@@ -140,8 +141,6 @@ struct ExerciseLoggingDock: View {
                 notesField
             }
         }
-        .padding(10)
-        .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
         .onChange(of: focusedField) { oldValue, _ in
             guard let oldValue else { return }
             switch oldValue {
@@ -169,8 +168,8 @@ struct ExerciseLoggingDock: View {
     // no-ops once the row is gone.
     private func setRow(_ set: ExerciseLogController.EditableSet) -> some View {
         HStack(spacing: 6) {
-            Text("Set \(set.setNumber)")
-                .font(.caption.weight(.semibold))
+            Text("\(set.setNumber)")
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 34, alignment: .leading)
 
