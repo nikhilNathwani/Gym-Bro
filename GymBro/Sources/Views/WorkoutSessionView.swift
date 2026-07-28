@@ -28,7 +28,6 @@ struct WorkoutSessionView: View {
     @State private var controller: ExerciseLogController?
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
 
     init(routineId: UUID, startIndex: Int) {
         self.routineId = routineId
@@ -85,20 +84,29 @@ struct WorkoutSessionView: View {
                 .padding(16)
             }
             Divider()
-            // One unified, fully-saturated accent-colored block for
-            // everything the user actually interacts with (steppers, notes,
-            // Prev/Next) — a faint accent tint made this area feel flat and
-            // not "pop" as the obvious hero control. Solid accent means its
-            // own content needs `Color.onAccent` instead of secondary/
-            // accent-colored text, since the accent asset's dark-mode
-            // appearance is too light for white text to clear WCAG AA.
-            VStack(spacing: 10) {
+            // One unified block for everything the user actually interacts
+            // with (steppers, notes, Prev/Next) — a translucent glass
+            // material with rounded top corners, echoing Notes' format bar
+            // rising from the bottom of the screen. Tried a fully-saturated
+            // accent-color fill first, but its dark-mode appearance (a much
+            // lighter lavender) made the white/near-black systemBackground
+            // text field chips inside it look mismatched. A material
+            // sidesteps that entirely — `.primary`/`.secondary`/
+            // `Color.accentColor` are already legible on it by design, in
+            // both appearances, so the content below reverts to those
+            // instead of a custom on-background color.
+            VStack(spacing: 20) {
                 ExerciseLoggingDock(controller: controller)
                 navBar
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color.accentColor)
+            .padding(.top, 20)
+            .padding(.bottom, 14)
+            .background(alignment: .top) {
+                UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20)
+                    .fill(.regularMaterial)
+                    .ignoresSafeArea(edges: .bottom)
+            }
         }
     }
 
@@ -119,7 +127,7 @@ struct WorkoutSessionView: View {
                     .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(Color.onAccent(colorScheme).opacity(currentIndex == 0 ? 0.35 : 1))
+            .foregroundStyle(currentIndex == 0 ? Color(.tertiaryLabel) : Color.accentColor)
             .disabled(currentIndex == 0)
             .accessibilityIdentifier("previousExerciseButton")
 
@@ -135,7 +143,7 @@ struct WorkoutSessionView: View {
                 .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(Color.onAccent(colorScheme).opacity(currentIndex == exercises.count - 1 ? 0.35 : 1))
+            .foregroundStyle(currentIndex == exercises.count - 1 ? Color(.tertiaryLabel) : Color.accentColor)
             .disabled(currentIndex == exercises.count - 1)
             .accessibilityIdentifier("nextExerciseButton")
         }
