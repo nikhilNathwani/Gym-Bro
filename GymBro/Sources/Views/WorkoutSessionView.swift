@@ -28,6 +28,7 @@ struct WorkoutSessionView: View {
     @State private var controller: ExerciseLogController?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     init(routineId: UUID, startIndex: Int) {
         self.routineId = routineId
@@ -84,18 +85,20 @@ struct WorkoutSessionView: View {
                 .padding(16)
             }
             Divider()
-            // One unified accent-tinted block for everything the user
-            // actually interacts with (steppers, notes, Prev/Next) — this
-            // used to be an accent-tinted box nested inside a separate grey
-            // `.bar` box, which read as "a unit inside a unit" rather than
-            // one contiguous control surface.
+            // One unified, fully-saturated accent-colored block for
+            // everything the user actually interacts with (steppers, notes,
+            // Prev/Next) — a faint accent tint made this area feel flat and
+            // not "pop" as the obvious hero control. Solid accent means its
+            // own content needs `Color.onAccent` instead of secondary/
+            // accent-colored text, since the accent asset's dark-mode
+            // appearance is too light for white text to clear WCAG AA.
             VStack(spacing: 10) {
                 ExerciseLoggingDock(controller: controller)
                 navBar
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color.accentColor.opacity(0.12))
+            .background(Color.accentColor)
         }
     }
 
@@ -116,7 +119,7 @@ struct WorkoutSessionView: View {
                     .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(currentIndex == 0 ? Color(.tertiaryLabel) : Color.accentColor)
+            .foregroundStyle(Color.onAccent(colorScheme).opacity(currentIndex == 0 ? 0.35 : 1))
             .disabled(currentIndex == 0)
             .accessibilityIdentifier("previousExerciseButton")
 
@@ -132,7 +135,7 @@ struct WorkoutSessionView: View {
                 .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(currentIndex == exercises.count - 1 ? Color(.tertiaryLabel) : Color.accentColor)
+            .foregroundStyle(Color.onAccent(colorScheme).opacity(currentIndex == exercises.count - 1 ? 0.35 : 1))
             .disabled(currentIndex == exercises.count - 1)
             .accessibilityIdentifier("nextExerciseButton")
         }

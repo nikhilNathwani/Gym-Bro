@@ -110,6 +110,7 @@ struct ExerciseLoggingDock: View {
         case notes
     }
     @FocusState private var focusedField: FocusField?
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -122,7 +123,7 @@ struct ExerciseLoggingDock: View {
                     .frame(maxWidth: .infinity)
             }
             .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.onAccent(colorScheme))
 
             VStack(spacing: 6) {
                 ForEach(controller.sets) { set in
@@ -137,7 +138,7 @@ struct ExerciseLoggingDock: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("NOTES")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.onAccent(colorScheme))
                 notesField
             }
         }
@@ -170,7 +171,7 @@ struct ExerciseLoggingDock: View {
         HStack(spacing: 6) {
             Text("\(set.setNumber)")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.onAccent(colorScheme))
                 .frame(width: 34, alignment: .leading)
 
             numericStepper(
@@ -209,7 +210,7 @@ struct ExerciseLoggingDock: View {
                 Button(action: controller.deleteLastSet) {
                     Image(systemName: "trash")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.onAccent(colorScheme).opacity(0.7))
                         .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
@@ -258,7 +259,7 @@ struct ExerciseLoggingDock: View {
         }
         .accessibilityIdentifier("addSetButton")
         .buttonStyle(.plain)
-        .foregroundStyle(Color.accentColor)
+        .foregroundStyle(Color.onAccent(colorScheme))
     }
 
     private var notesField: some View {
