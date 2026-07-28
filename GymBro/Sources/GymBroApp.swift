@@ -4,7 +4,7 @@ import SwiftUI
 struct GymBroApp: App {
     var body: some Scene {
         WindowGroup {
-            RoutinesListView()
+            RootTabView()
         }
     }
 }

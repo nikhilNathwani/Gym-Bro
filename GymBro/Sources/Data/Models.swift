@@ -102,6 +102,14 @@ struct RoutineLabelUpdate: Encodable {
     var label: String?
 }
 
+struct RoutineSortOrderUpdate: Encodable {
+    var sortOrder: Int
+
+    enum CodingKeys: String, CodingKey {
+        case sortOrder = "sort_order"
+    }
+}
+
 struct NewRoutineExercise: Encodable {
     var routineId: UUID
     var exerciseId: UUID
@@ -167,6 +175,11 @@ struct NewSetLog: Encodable {
         case setNumber = "set_number"
         case weight, reps
     }
+}
+
+struct SetLogUpdate: Encodable {
+    var weight: Double?
+    var reps: Int?
 }
 
 struct IDRow: Decodable {

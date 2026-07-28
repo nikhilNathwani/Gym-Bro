@@ -8,24 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		01068E93AA7EE45C4B95B1D2 /* GymBroSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */; };
-		1665054C69D9C1FA79E2EFBF /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8414F4B943A457E9797CE6E /* Theme.swift */; };
+		2318A9EB4DAD89E8EA2AC116 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 556ACE6462B2C1240D04C4D9 /* RootTabView.swift */; };
 		285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */; };
+		2F01D41AB659FA3D429137AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F07B56C2A208DF2AA907E6A /* Assets.xcassets */; };
 		3126B370DC46079AB1900D33 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */; };
 		316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */; };
 		440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7703A8A07881F5692FE9A957 /* AppRoute.swift */; };
 		457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */; };
+		4B141AC09D6F3E6D0216CEAA /* InlineExerciseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */; };
 		7579B6E2368562EFAF10BA61 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D0194362D4B87CCA67A634 /* Models.swift */; };
 		78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE44036007B45B296ABCA1 /* GymBroApp.swift */; };
 		8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35149503214E7AEC5C567893 /* NewExerciseView.swift */; };
 		8C1DE0ECEC546BAB2D7AB003 /* RoutineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */; };
 		8E575A8CB9BF947ABA747440 /* RoutinesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */; };
-		9B459AB6E02D1881DE1186EC /* AccordionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343B06E6E4A7F97749A5F14A /* AccordionCard.swift */; };
+		98B76F26144E80A3DCBADBBC /* WorkoutSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4435749C212034449DA160C9 /* WorkoutSessionView.swift */; };
 		B484D37310886D001EA1DC5A /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5F0B24793216F6AB7DDF461E /* Supabase */; };
 		BC81AEB5C3C1DCCD56B1BBD7 /* NumericKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */; };
 		BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */; };
 		BF5E3E745C38531BB72F9684 /* RoutineLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */; };
 		C8954C74B7434F852E9FE1CA /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD229F1100E5DEC28467D5F /* Styles.swift */; };
 		CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */; };
+		E39AF1B591BAE84E7034F34A /* AddExerciseToRoutineSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */; };
 		EA73DAA28712ED5BC1C4B1EE /* SetFieldsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */; };
 		F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */; };
 /* End PBXBuildFile section */
@@ -45,26 +48,29 @@
 		23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroSmokeTests.swift; sourceTree = "<group>"; };
 		27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
 		2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
-		343B06E6E4A7F97749A5F14A /* AccordionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccordionCard.swift; sourceTree = "<group>"; };
 		35149503214E7AEC5C567893 /* NewExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewExerciseView.swift; sourceTree = "<group>"; };
+		4435749C212034449DA160C9 /* WorkoutSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionView.swift; sourceTree = "<group>"; };
+		556ACE6462B2C1240D04C4D9 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
 		5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLibraryView.swift; sourceTree = "<group>"; };
+		5F07B56C2A208DF2AA907E6A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSummaryView.swift; sourceTree = "<group>"; };
 		7703A8A07881F5692FE9A957 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
 		8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
-		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0D0194362D4B87CCA67A634 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineExerciseCard.swift; sourceTree = "<group>"; };
 		B2317E95141F705BE6DC44E0 /* RoutineLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineLetter.swift; sourceTree = "<group>"; };
 		B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineDetailView.swift; sourceTree = "<group>"; };
 		B81E1D26EC49432B7163E853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExerciseToRoutineSheet.swift; sourceTree = "<group>"; };
+		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDD229F1100E5DEC28467D5F /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetFieldsEditor.swift; sourceTree = "<group>"; };
 		DCBE44036007B45B296ABCA1 /* GymBroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroApp.swift; sourceTree = "<group>"; };
 		EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryEntryView.swift; sourceTree = "<group>"; };
-		F8414F4B943A457E9797CE6E /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,8 +101,10 @@
 				597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */,
 				5B3D578C31787611898D6AF0 /* ExerciseLibraryView.swift */,
 				35149503214E7AEC5C567893 /* NewExerciseView.swift */,
+				556ACE6462B2C1240D04C4D9 /* RootTabView.swift */,
 				B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */,
 				7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */,
+				4435749C212034449DA160C9 /* WorkoutSessionView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -132,9 +140,10 @@
 		675D6D5EBAED5464934CEFC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				343B06E6E4A7F97749A5F14A /* AccordionCard.swift */,
+				C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */,
 				8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */,
 				EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */,
+				AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */,
 				1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */,
 				6D91605E22BF1A82A79F7462 /* LogSummaryView.swift */,
 				27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */,
@@ -147,9 +156,9 @@
 		D9D50EC7FA69D9E7CE42F203 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				5F07B56C2A208DF2AA907E6A /* Assets.xcassets */,
 				DCBE44036007B45B296ABCA1 /* GymBroApp.swift */,
 				B81E1D26EC49432B7163E853 /* Info.plist */,
-				F8414F4B943A457E9797CE6E /* Theme.swift */,
 				675D6D5EBAED5464934CEFC6 /* Components */,
 				306674D8113205DC778C799C /* Data */,
 				24D316209E8C634361A65145 /* Views */,
@@ -192,6 +201,7 @@
 			buildConfigurationList = A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */;
 			buildPhases = (
 				2829CBF22D8A2F1608698F54 /* Sources */,
+				1109C5FA3E866524EB5088CC /* Resources */,
 				3434BED229ECB78B62959A6C /* Frameworks */,
 			);
 			buildRules = (
@@ -221,7 +231,6 @@
 						TestTargetID = 880F96BE0B0D0E044B56C066;
 					};
 					880F96BE0B0D0E044B56C066 = {
-						DevelopmentTeam = 5BWXZ738L7;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -249,6 +258,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		1109C5FA3E866524EB5088CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F01D41AB659FA3D429137AB /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		08D27791AB5E453E107D0C7F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -262,25 +282,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9B459AB6E02D1881DE1186EC /* AccordionCard.swift in Sources */,
+				E39AF1B591BAE84E7034F34A /* AddExerciseToRoutineSheet.swift in Sources */,
 				440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */,
 				F382C85EB8708A6A04D66540 /* AssignExercisePickerView.swift in Sources */,
 				285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */,
 				BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */,
 				78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */,
 				457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */,
+				4B141AC09D6F3E6D0216CEAA /* InlineExerciseCard.swift in Sources */,
 				CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */,
 				316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */,
 				7579B6E2368562EFAF10BA61 /* Models.swift in Sources */,
 				8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */,
 				BC81AEB5C3C1DCCD56B1BBD7 /* NumericKeypadView.swift in Sources */,
+				2318A9EB4DAD89E8EA2AC116 /* RootTabView.swift in Sources */,
 				8C1DE0ECEC546BAB2D7AB003 /* RoutineDetailView.swift in Sources */,
 				BF5E3E745C38531BB72F9684 /* RoutineLetter.swift in Sources */,
 				8E575A8CB9BF947ABA747440 /* RoutinesListView.swift in Sources */,
 				EA73DAA28712ED5BC1C4B1EE /* SetFieldsEditor.swift in Sources */,
 				C8954C74B7434F852E9FE1CA /* Styles.swift in Sources */,
 				3126B370DC46079AB1900D33 /* SupabaseService.swift in Sources */,
-				1665054C69D9C1FA79E2EFBF /* Theme.swift in Sources */,
+				98B76F26144E80A3DCBADBBC /* WorkoutSessionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,9 +405,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				DEVELOPMENT_TEAM = 4J8529PB76;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -422,9 +445,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				DEVELOPMENT_TEAM = 4J8529PB76;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

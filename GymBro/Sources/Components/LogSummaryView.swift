@@ -24,13 +24,13 @@ struct LogSummaryView: View {
                     value: log.setLogs.map { $0.weight.map(formatNumber) ?? "—" }.joined(separator: ", "))
             }
         }
-        .font(.system(size: 14))
+        .font(.subheadline)
     }
 
     private func row(label: String, value: String, lineLimit: Int? = nil) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text(label)
-                .foregroundColor(Theme.foreground)
+                .foregroundStyle(.secondary)
                 .frame(width: 56, alignment: .leading)
             Text(value)
                 .lineLimit(lineLimit)

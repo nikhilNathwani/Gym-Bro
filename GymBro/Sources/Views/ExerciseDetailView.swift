@@ -42,12 +42,10 @@ struct ExerciseDetailView: View {
                     }
                     .padding(16)
                 }
-                .background(Theme.background)
             } else if isLoading {
                 ProgressView()
             } else {
-                Text("Exercise not found")
-                    .foregroundColor(Theme.foreground)
+                ContentUnavailableView("Exercise Not Found", systemImage: "exclamationmark.triangle")
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -81,8 +79,7 @@ struct ExerciseDetailView: View {
 
     private var nameField: some View {
         TextField("Exercise name", text: $nameDraft)
-            .font(.system(size: 28))
-            .foregroundColor(Theme.foreground)
+            .font(.largeTitle.bold())
             .focused($isNameFocused)
             .onChange(of: isNameFocused) { wasFocused, isFocused in
                 if wasFocused && !isFocused { Task { await saveName() } }
@@ -93,10 +90,9 @@ struct ExerciseDetailView: View {
         Group {
             if isEditing {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Target").font(.system(size: 14, weight: .medium))
+                    Text("Target").font(.headline)
                     TextField("e.g. 3 sets × 6–10 reps", text: $targetDraft)
-                        .padding(10)
-                        .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                        .textFieldStyle(.roundedBorder)
                         .focused($isTargetFocused)
                         .onChange(of: isTargetFocused) { wasFocused, isFocused in
                             if wasFocused && !isFocused { Task { await saveTarget() } }
@@ -104,16 +100,16 @@ struct ExerciseDetailView: View {
                 }
             } else if let subtitle = exercise.subtitle, !subtitle.isEmpty {
                 (Text("Target: ").fontWeight(.medium) + Text(subtitle))
-                    .font(.system(size: 14))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
         }
-        .foregroundColor(Theme.foreground)
     }
 
     private func cuesSection(_ exercise: ExerciseDetail) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Cues").font(.system(size: 14, weight: .medium))
+                Text("Cues").font(.headline)
                 Spacer()
                 HStack(spacing: 16) {
                     if isEditing && !isCuesCollapsed {
@@ -130,7 +126,7 @@ struct ExerciseDetailView: View {
                         isCuesCollapsed.toggle()
                     }
                 }
-                .font(.system(size: 12))
+                .font(.subheadline)
             }
 
             if !isCuesCollapsed {
@@ -138,7 +134,7 @@ struct ExerciseDetailView: View {
                     TextEditor(text: $cuesDraft)
                         .frame(minHeight: 100, maxHeight: 158)
                         .padding(6)
-                        .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
                         .focused($isCuesFocused)
                         .onChange(of: isCuesFocused) { wasFocused, isFocused in
                             if wasFocused && !isFocused { Task { await saveCues() } }
@@ -146,32 +142,30 @@ struct ExerciseDetailView: View {
                 } else if let cues = exercise.cues, !cues.isEmpty {
                     ScrollView {
                         Text(cues)
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .frame(maxHeight: 158)
                     .padding(10)
-                    .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
                 } else {
                     Text(isEditing ? "No cues yet — tap Edit to add some." : "No cues yet.")
-                        .font(.system(size: 14))
-                        .opacity(0.4)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                         .padding(10)
-                        .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
                 }
             }
         }
-        .foregroundColor(Theme.foreground)
     }
 
     private func historySection(_ exercise: ExerciseDetail) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("History")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Theme.foreground)
+            Text("History").font(.headline)
             if exercise.exerciseLogs.isEmpty {
                 Text("No logged sessions yet.")
-                    .foregroundColor(Theme.foreground)
+                    .foregroundStyle(.secondary)
             } else {
                 ForEach(exercise.exerciseLogs) { log in
                     HistoryEntryView(

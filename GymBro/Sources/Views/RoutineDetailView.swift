@@ -2,54 +2,114 @@ import SwiftUI
 
 /// Port of routines/[id]/page.tsx + RoutineView.tsx.
 ///
-/// View mode is a ScrollView of AccordionCards (matches the web's expand/
-/// scroll-into-view accordion). Edit mode swaps to a native List with
-/// onDelete/onMove — replacing the web's explicit up/down arrow buttons with
-/// standard iOS drag-to-reorder and swipe-to-delete.
+/// A single native List for both view and edit states, toggled by the
+/// standard `EditButton()` — replacing the web's explicit up/down arrow
+/// buttons with iOS drag-to-reorder/swipe-to-delete. This is a plain
+/// browse/organize list — tapping a row (outside edit mode) pushes straight
+/// to that exercise's full page (cues, history, editing). Actual logging
+/// happens in `WorkoutSessionView`, reached via the "Start Workout" button:
+/// a full-screen one-exercise-at-a-time flow with Prev/Next, because the
+/// user only ever logs one exercise at a time and an inline accordion here
+/// added scrolling/tapping without adding any benefit. (An earlier revision
+/// of this screen had an inline accordion — see git history/
+/// INLINE_LOGGING_HANDOFF.md — replaced after user feedback that it didn't
+/// solve the actual complaint, plus a real bug where any NavigationLink
+/// nested in a List row makes the *whole row* tappable-through to that link.)
 struct RoutineDetailView: View {
     let routineId: UUID
+    @Binding var addExerciseTrigger: Bool
 
     @State private var routine: RoutineDetail?
     @State private var routineIndex = 0
     @State private var allExercises: [Exercise] = []
     @State private var isLoading = true
-    @State private var isEditing = false
     @State private var titleDraft = ""
-    @State private var expandedExerciseId: UUID?
     @State private var showDeleteConfirm = false
+    @State private var showAddExercise = false
+    @State private var pendingRemoveOffsets: IndexSet?
     @State private var errorMessage: String?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.editMode) private var editMode
+
+    private var isEditing: Bool { editMode?.wrappedValue.isEditing ?? false }
 
     var body: some View {
         Group {
             if let routine {
-                if isEditing {
-                    editingLayout(routine)
-                } else {
-                    viewingLayout(routine)
+                List {
+                    // Apple Notes-style: no nav bar title, just the back
+                    // chevron — the routine's name is this heading instead.
+                    // Outside Edit mode it's plain text sitting directly on
+                    // the page background, like a real page title; only in
+                    // Edit mode does it become a boxed, editable field.
+                    Section {
+                        if isEditing {
+                            TextField("Routine name", text: $titleDraft)
+                                .font(.title2.bold())
+                        } else {
+                            Text(displayName(routine))
+                                .font(.title2.bold())
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets())
+                        }
+                    }
+                    .listRowSeparator(.hidden)
+
+                    if !routine.routineExercises.isEmpty && !isEditing {
+                        Section {
+                            NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
+                                Label("Start Workout", systemImage: "play.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, 4)
+                            }
+                        }
+                        .listRowBackground(Color.accentColor)
+                        .foregroundStyle(.white)
+                    }
+
+                    Section("Exercises") {
+                        if routine.routineExercises.isEmpty {
+                            Text("No exercises yet — tap + to add one.")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(routine.routineExercises) { entry in
+                                exerciseRow(entry.exercise)
+                            }
+                            .onDelete { offsets in pendingRemoveOffsets = offsets }
+                            .onMove { source, destination in
+                                Task { await moveExercises(from: source, to: destination, routine: routine) }
+                            }
+                        }
+                    }
+
+                    if isEditing {
+                        Section {
+                            Button(role: .destructive) {
+                                showDeleteConfirm = true
+                            } label: {
+                                Text("Delete this routine")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                        }
+                    }
                 }
             } else if isLoading {
                 ProgressView()
             } else {
-                Text("Routine not found")
-                    .foregroundColor(Theme.foreground)
+                ContentUnavailableView("Routine Not Found", systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle(routine.map { title(for: $0) } ?? "")
+        // No nav bar title at all — just the back chevron. The routine name
+        // is the heading at the top of the list instead (see body), same
+        // Apple Notes "open a folder" treatment as the account/settings
+        // icons replacing "Gym Bro" on the routines list itself.
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if routine != nil {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(isEditing ? "Done" : "Edit") { toggleEditing() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button("Delete Routine", role: .destructive) { showDeleteConfirm = true }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
+                ToolbarItem(placement: .topBarTrailing) { EditButton() }
             }
         }
         .confirmationDialog(
@@ -59,137 +119,33 @@ struct RoutineDetailView: View {
         ) {
             Button("Delete", role: .destructive) { Task { await deleteRoutine() } }
         }
-        .task { await load() }
-        .errorAlert($errorMessage)
-    }
-
-    // MARK: - View mode
-
-    private func viewingLayout(_ routine: RoutineDetail) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    exerciseAccordionList(routine)
-                    AssignExercisePickerView(
-                        routineId: routineId,
-                        unassignedExercises: unassignedExercises(routine),
-                        onChanged: { await reload() },
-                        onError: { errorMessage = $0 }
-                    )
-                }
-                .padding(16)
-            }
-            .onChange(of: expandedExerciseId) { _, newValue in
-                guard let id = newValue else { return }
-                withAnimation(.easeOut(duration: 0.25)) {
-                    proxy.scrollTo(id, anchor: .top)
+        .confirmationDialog(
+            "Remove this exercise from the routine?",
+            isPresented: Binding(
+                get: { pendingRemoveOffsets != nil },
+                set: { if !$0 { pendingRemoveOffsets = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) {
+                if let offsets = pendingRemoveOffsets, let routine {
+                    Task { await removeExercises(at: offsets, routine: routine) }
                 }
             }
         }
-        .background(Theme.background)
-    }
-
-    private func exerciseAccordionList(_ routine: RoutineDetail) -> some View {
-        VStack(spacing: 12) {
-            if routine.routineExercises.isEmpty {
-                Text("No exercises yet — add one below.")
-                    .foregroundColor(Theme.foreground)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                ForEach(routine.routineExercises) { entry in
-                    let exercise = entry.exercise
-                    AccordionCard(
-                        isExpanded: expandedExerciseId == exercise.id,
-                        onToggle: {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                expandedExerciseId = (expandedExerciseId == exercise.id) ? nil : exercise.id
-                            }
-                        },
-                        header: {
-                            Text(exercise.name).font(.system(size: 17, weight: .medium))
-                        },
-                        content: {
-                            exerciseCardContent(exercise)
-                        }
-                    )
-                    .id(exercise.id)
+        .onChange(of: isEditing) { wasEditing, editing in
+            if editing {
+                titleDraft = routine.map(displayName) ?? ""
+            } else if wasEditing {
+                let trimmed = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed != (routine?.label ?? "") {
+                    Task { await saveLabel() }
                 }
             }
         }
-    }
-
-    private func exerciseCardContent(_ exercise: ExerciseDetail) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            NavigationLink(value: AppRoute.exercise(exercise.id)) {
-                Text("Open full exercise page")
-                    .font(.system(size: 12))
-                    .underline()
-                    .foregroundColor(Theme.foreground)
-            }
-
-            if let subtitle = exercise.subtitle, !subtitle.isEmpty {
-                (Text("Target: ").fontWeight(.medium) + Text(subtitle))
-                    .font(.system(size: 14))
-                    .foregroundColor(Theme.foreground)
-            }
-
-            if let cues = exercise.cues, !cues.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Cues").font(.system(size: 14, weight: .medium))
-                    ScrollView {
-                        Text(cues)
-                            .font(.system(size: 14))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxHeight: 118)
-                    .padding(8)
-                    .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
-                }
-                .foregroundColor(Theme.foreground)
-            }
-
-            if let lastLog = exercise.exerciseLogs.first {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Last logged").font(.system(size: 14, weight: .medium))
-                    LogSummaryView(log: lastLog)
-                }
-                .foregroundColor(Theme.foreground)
-            }
-
-            LogEntryFormView(
-                exerciseId: exercise.id,
-                previousSets: exercise.exerciseLogs.first?.setLogs ?? [],
-                onLogged: { await reload() },
-                onError: { errorMessage = $0 }
-            )
-        }
-    }
-
-    // MARK: - Edit mode
-
-    private func editingLayout(_ routine: RoutineDetail) -> some View {
-        List {
-            Section("Title") {
-                TextField("e.g. Vertical Push/Pull", text: $titleDraft)
-                Button("Save") { Task { await saveLabel() } }
-            }
-
-            Section("Exercises") {
-                if routine.routineExercises.isEmpty {
-                    Text("No exercises yet.").foregroundColor(.secondary)
-                } else {
-                    ForEach(routine.routineExercises) { entry in
-                        Text(entry.exercise.name)
-                    }
-                    .onDelete { offsets in Task { await removeExercises(at: offsets, routine: routine) } }
-                    .onMove { source, destination in
-                        Task { await moveExercises(from: source, to: destination, routine: routine) }
-                    }
-                }
-            }
-
-            Section("Add exercise") {
-                AssignExercisePickerView(
+        .sheet(isPresented: $showAddExercise) {
+            if let routine {
+                AddExerciseToRoutineSheet(
                     routineId: routineId,
                     unassignedExercises: unassignedExercises(routine),
                     onChanged: { await reload() },
@@ -197,15 +153,44 @@ struct RoutineDetailView: View {
                 )
             }
         }
-        .environment(\.editMode, .constant(.active))
+        .onChange(of: addExerciseTrigger) { _, _ in
+            // Refresh first in case an exercise was created elsewhere (e.g.
+            // the Exercises tab) while this routine screen stayed mounted
+            // in the background — cheap insurance against a stale
+            // allExercises snapshot, even though this wasn't reproducible
+            // as an actual bug.
+            Task {
+                await reload()
+                showAddExercise = true
+            }
+        }
+        .task { await load() }
+        .errorAlert($errorMessage)
+    }
+
+    private func exerciseRow(_ exercise: ExerciseDetail) -> some View {
+        NavigationLink(value: AppRoute.exercise(exercise.id)) {
+            HStack {
+                if loggedToday(exercise) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.accentColor)
+                        .accessibilityLabel("Logged today")
+                }
+                Text(exercise.name)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+        }
     }
 
     // MARK: - Data
 
-    private func title(for routine: RoutineDetail) -> String {
-        let letter = RoutineLetter.forIndex(routineIndex)
-        guard let label = routine.label, !label.isEmpty else { return letter }
-        return "\(letter) - \(label)"
+    /// A routine's name is its label now, not a separate "Routine A" +
+    /// label pairing (see RoutinesListView.displayName) — this positional
+    /// fallback only matters for legacy rows with no label at all.
+    private func displayName(_ routine: RoutineDetail) -> String {
+        guard let label = routine.label, !label.isEmpty else { return RoutineLetter.forIndex(routineIndex) }
+        return label
     }
 
     private func unassignedExercises(_ routine: RoutineDetail) -> [Exercise] {
@@ -213,10 +198,8 @@ struct RoutineDetailView: View {
         return allExercises.filter { !assignedIds.contains($0.id) }
     }
 
-    private func toggleEditing() {
-        isEditing.toggle()
-        expandedExerciseId = nil
-        if isEditing { titleDraft = routine?.label ?? "" }
+    private func loggedToday(_ exercise: ExerciseDetail) -> Bool {
+        exercise.exerciseLogs.contains { Calendar.current.isDateInToday($0.createdAt) }
     }
 
     private func load() async {
@@ -275,6 +258,7 @@ struct RoutineDetailView: View {
             for id in ids {
                 try await SupabaseService.shared.removeExerciseFromRoutine(routineExerciseId: id)
             }
+            pendingRemoveOffsets = nil
             await reload()
         } catch {
             errorMessage = error.localizedDescription

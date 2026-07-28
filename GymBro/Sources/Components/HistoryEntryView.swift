@@ -24,7 +24,7 @@ struct HistoryEntryView: View {
                         Button("Edit") { beginEditing() }
                         Button("Delete", role: .destructive) { showDeleteConfirm = true }
                     }
-                    .font(.system(size: 12))
+                    .font(.subheadline)
                 }
                 LogSummaryView(log: log)
             } else {
@@ -32,37 +32,30 @@ struct HistoryEntryView: View {
 
                 TextField("Notes — how did it feel?", text: $notes, axis: .vertical)
                     .lineLimit(2...4)
-                    .padding(10)
-                    .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                    .textFieldStyle(.roundedBorder)
 
                 HStack(spacing: 8) {
                     Button {
                         Task { await save() }
                     } label: {
                         Text(isSaving ? "Saving…" : "Save")
-                            .font(.system(size: 14, weight: .medium))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .foregroundColor(Theme.background)
-                            .background(Theme.foreground)
                     }
+                    .buttonStyle(.borderedProminent)
                     .disabled(isSaving)
 
                     Button {
                         isEditing = false
                     } label: {
                         Text("Cancel")
-                            .font(.system(size: 14, weight: .medium))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .foregroundColor(Theme.foreground)
-                            .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
                     }
+                    .buttonStyle(.bordered)
                 }
             }
         }
         .padding(12)
-        .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
         .confirmationDialog(
             "Delete this logged session? This cannot be undone.",
             isPresented: $showDeleteConfirm,

@@ -2,14 +2,18 @@ import SwiftUI
 
 /// Port of AssignExercisePicker.tsx: inline search + "Add"/"Create" panel,
 /// always visible at the bottom of a routine (both view and edit modes).
+/// Rendered inside a List Section, so its rows use plain List-row styling
+/// rather than a custom bordered box.
 struct AssignExercisePickerView: View {
     let routineId: UUID
     let unassignedExercises: [Exercise]
     let onChanged: () async -> Void
     let onError: (String) -> Void
+    var autofocus: Bool = false
 
     @State private var query = ""
     @State private var isBusy = false
+    @FocusState private var isFocused: Bool
 
     private var trimmed: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -23,35 +27,20 @@ struct AssignExercisePickerView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("+ Add exercise")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Theme.foreground)
-
+        Group {
             TextField("Search or create an exercise…", text: $query)
-                .padding(10)
-                .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+                .focused($isFocused)
+                .onAppear { if autofocus { isFocused = true } }
 
-            if !trimmed.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(Array(filtered.enumerated()), id: \.element.id) { index, exercise in
-                        if index > 0 {
-                            Rectangle().fill(Theme.foreground).frame(height: 1)
-                        }
-                        resultRow(title: exercise.name, actionLabel: "Add") {
-                            await add(exercise)
-                        }
-                    }
-                    if !hasExactMatch {
-                        if !filtered.isEmpty {
-                            Rectangle().fill(Theme.foreground).frame(height: 1)
-                        }
-                        resultRow(title: "Create “\(trimmed)”", actionLabel: "Create") {
-                            await create()
-                        }
-                    }
+            ForEach(filtered) { exercise in
+                resultRow(title: exercise.name, actionLabel: "Add") {
+                    await add(exercise)
                 }
-                .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+            }
+            if !trimmed.isEmpty && !hasExactMatch {
+                resultRow(title: "Create “\(trimmed)”", actionLabel: "Create") {
+                    await create()
+                }
             }
         }
         .disabled(isBusy)
@@ -59,19 +48,11 @@ struct AssignExercisePickerView: View {
 
     private func resultRow(title: String, actionLabel: String, action: @escaping () async -> Void) -> some View {
         HStack {
-            Text(title).font(.system(size: 14))
+            Text(title)
             Spacer()
-            Button {
-                Task { await action() }
-            } label: {
-                Text(actionLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-            }
-            .buttonStyle(BorderedRowButtonStyle())
+            Button(actionLabel) { Task { await action() } }
+                .buttonStyle(.bordered)
         }
-        .padding(10)
     }
 
     private func add(_ exercise: Exercise) async {

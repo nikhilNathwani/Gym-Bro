@@ -19,12 +19,13 @@ private let keys: [(label: String, kind: KeyKind)] = [
     ("7", .digit("7")), ("8", .digit("8")), ("9", .digit("9")), (",", .comma),
 ]
 
-/// Custom on-screen keypad backing the Weight/Reps fields in SetFieldsEditor.
-/// A deliberate exception to "prefer native controls" — same rationale as
-/// Apple's own Calculator/Phone dialer using bespoke keypads: the
-/// comma-multi-set entry with suggestion chips has no system-keyboard
-/// equivalent. Port of components/NumericKeypad.tsx; ownership of `value`
-/// lives in the caller (SetFieldsEditor), this view is purely presentational.
+/// Custom on-screen keypad backing the Weight/Reps fields in SetFieldsEditor,
+/// styled after the system Phone dialer / Calculator keypads. A deliberate
+/// exception to "prefer native controls" — same rationale as Apple's own
+/// apps using bespoke keypads: the comma-multi-set entry with suggestion
+/// chips has no system-keyboard equivalent. Port of components/NumericKeypad.tsx;
+/// ownership of `value` lives in the caller (SetFieldsEditor), this view is
+/// purely presentational.
 struct NumericKeypadView: View {
     let value: String
     let suggestions: [KeypadSuggestion]
@@ -43,8 +44,7 @@ struct NumericKeypadView: View {
         VStack(spacing: 0) {
             HStack {
                 Text(value.isEmpty ? " " : value)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(Theme.foreground)
+                    .font(.title3.weight(.medium))
                     .monospacedDigit()
                 Spacer()
                 Button {
@@ -52,17 +52,12 @@ struct NumericKeypadView: View {
                     onDone()
                 } label: {
                     Text("Done")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Theme.background)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Theme.foreground)
                 }
+                .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("keypadDone")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .overlay(Rectangle().frame(height: 1).foregroundColor(Theme.foreground), alignment: .bottom)
 
             if !suggestions.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -73,12 +68,8 @@ struct NumericKeypadView: View {
                                 onSuggestion(s.value)
                             } label: {
                                 Text(s.label)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(Theme.foreground)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
                             }
+                            .buttonStyle(.bordered)
                         }
                     }
                     .padding(.horizontal, 12)
@@ -86,7 +77,7 @@ struct NumericKeypadView: View {
                 .padding(.vertical, 8)
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 4), spacing: 4) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
                 ForEach(Array(keys.enumerated()), id: \.offset) { _, key in
                     KeyButton(label: key.label, kind: key.kind) {
                         lightTap += 1
@@ -99,18 +90,17 @@ struct NumericKeypadView: View {
                     }
                 }
             }
-            .padding(.horizontal, 11)
+            .padding(.horizontal, 12)
 
             KeyButton(label: "0", kind: .digit("0")) {
                 lightTap += 1
                 onDigit("0")
             }
-            .padding(.horizontal, 11)
-            .padding(.top, 4)
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
             .padding(.bottom, 12)
         }
-        .background(Theme.background)
-        .overlay(Rectangle().frame(height: 1).foregroundColor(Theme.foreground), alignment: .top)
+        .background(.bar)
         .sensoryFeedback(.impact(weight: .light), trigger: lightTap)
         .sensoryFeedback(.impact(weight: .medium), trigger: mediumTap)
         .sensoryFeedback(.success, trigger: doneTap)
@@ -127,10 +117,10 @@ private struct KeyButton: View {
             Group {
                 if case .backspace = kind {
                     Image(systemName: "delete.left")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.title3.weight(.medium))
                 } else {
                     Text(label)
-                        .font(.system(size: 20, weight: .medium))
+                        .font(.title2.weight(.medium))
                 }
             }
             .frame(maxWidth: .infinity)
@@ -153,9 +143,11 @@ private struct KeyButton: View {
 private struct KeyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundColor(configuration.isPressed ? Theme.background : Theme.foreground)
-            .background(configuration.isPressed ? Theme.foreground : Theme.background)
-            .overlay(Rectangle().stroke(Theme.foreground, lineWidth: 1))
+            .foregroundStyle(.primary)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(configuration.isPressed ? Color(.systemGray4) : Color(.secondarySystemBackground))
+            )
     }
 }
 

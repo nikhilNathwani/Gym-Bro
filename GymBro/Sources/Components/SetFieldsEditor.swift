@@ -65,18 +65,23 @@ struct SetFieldsEditor: View {
     ) -> some View {
         HStack(spacing: 8) {
             Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(Theme.foreground)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
                 .frame(width: 56, alignment: .leading)
             Button(action: action) {
                 Text(text.isEmpty ? placeholder : text)
-                    .font(.system(size: 16))
-                    .foregroundColor(text.isEmpty ? Theme.foreground.opacity(0.4) : Theme.foreground)
+                    .font(.body)
+                    .foregroundStyle(text.isEmpty ? .secondary : .primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.secondarySystemBackground))
+                    )
                     .overlay(
-                        Rectangle().stroke(Theme.foreground, lineWidth: isActive ? 2 : 1)
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(isActive ? Color.accentColor : .clear, lineWidth: 2)
                     )
             }
             .buttonStyle(.plain)

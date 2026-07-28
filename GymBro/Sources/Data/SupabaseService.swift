@@ -91,6 +91,18 @@ final class SupabaseService {
         try await client.from("routines").delete().eq("id", value: id).execute()
     }
 
+    /// Bulk sort_order rewrite over the whole list, same approach as
+    /// reorderRoutineExercises — native List.onMove hands back an arbitrary
+    /// reorder, not a single step.
+    func reorderRoutines(orderedIds: [UUID]) async throws {
+        for (index, id) in orderedIds.enumerated() {
+            try await client.from("routines")
+                .update(RoutineSortOrderUpdate(sortOrder: index))
+                .eq("id", value: id)
+                .execute()
+        }
+    }
+
     func addExerciseToRoutine(routineId: UUID, exerciseId: UUID) async throws {
         let countResponse = try await client.from("routine_exercises")
             .select("id", head: true, count: .exact)
@@ -228,6 +240,58 @@ final class SupabaseService {
 
     func deleteLogEntry(id: UUID) async throws {
         try await client.from("exercise_logs").delete().eq("id", value: id).execute()
+    }
+
+    /// Creates the workout_session + exercise_log for "today" with no sets
+    /// yet — used by the routine page's inline logging, which must not log
+    /// anything just because an exercise card was expanded/viewed. Callers
+    /// invoke this lazily, only on the first real edit (a stepper tap, a
+    /// typed value, or "Add set"), and add set_logs separately via
+    /// createSetLog.
+    @discardableResult
+    func createExerciseLogForToday(exerciseId: UUID) async throws -> UUID {
+        let session: IDRow = try await client.from("workout_sessions")
+            .insert(NewWorkoutSession())
+            .select("id")
+            .single()
+            .execute()
+            .value
+
+        let log: IDRow = try await client.from("exercise_logs")
+            .insert(NewExerciseLog(sessionId: session.id, exerciseId: exerciseId, notes: nil))
+            .select("id")
+            .single()
+            .execute()
+            .value
+        return log.id
+    }
+
+    @discardableResult
+    func createSetLog(exerciseLogId: UUID, setNumber: Int, weight: Double?, reps: Int?) async throws -> UUID {
+        let row: IDRow = try await client.from("set_logs")
+            .insert(NewSetLog(exerciseLogId: exerciseLogId, setNumber: setNumber, weight: weight, reps: reps))
+            .select("id")
+            .single()
+            .execute()
+            .value
+        return row.id
+    }
+
+    func updateSetLog(id: UUID, weight: Double?, reps: Int?) async throws {
+        try await client.from("set_logs")
+            .update(SetLogUpdate(weight: weight, reps: reps))
+            .eq("id", value: id)
+            .execute()
+    }
+
+    /// Notes-only update, independent of set_logs — unlike updateLogEntry
+    /// (which destructively replaces every set_log), inline editing needs
+    /// to touch just the note without disturbing sets edited elsewhere.
+    func updateExerciseLogNotesOnly(id: UUID, notes: String?) async throws {
+        try await client.from("exercise_logs")
+            .update(ExerciseLogNotesUpdate(notes: notes))
+            .eq("id", value: id)
+            .execute()
     }
 
     private func insertSetLogs(exerciseLogId: UUID, weights: [Double?], reps: [Int?]) async throws {
