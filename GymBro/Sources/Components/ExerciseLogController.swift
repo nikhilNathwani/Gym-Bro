@@ -65,17 +65,6 @@ final class ExerciseLogController {
         return first
     }
 
-    func setsSummary(_ log: ExerciseLog) -> String {
-        log.setLogs
-            .sorted { $0.setNumber < $1.setNumber }
-            .map { set in
-                let weight = set.weight.map(formatNumber) ?? "–"
-                let reps = set.reps.map(String.init) ?? "–"
-                return "\(weight)×\(reps)"
-            }
-            .joined(separator: " · ")
-    }
-
     // MARK: - Seeding
 
     private func seed() {

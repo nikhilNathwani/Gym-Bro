@@ -40,7 +40,7 @@ struct ExerciseReferenceSection: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.accentColor)
             }
-            Text(controller.setsSummary(log))
+            Text(log.setsSummary)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .monospacedDigit()

@@ -42,6 +42,20 @@ struct ExerciseLog: Codable, Identifiable, Hashable {
         case createdAt = "created_at"
         case setLogs = "set_logs"
     }
+
+    /// Compact "45×10 · 40×10" rendering of this log's sets, shared between
+    /// the "Last Time" peek (ExerciseReferenceSection) and the routine
+    /// list's inline today's-progress preview (RoutineDetailView).
+    var setsSummary: String {
+        setLogs
+            .sorted { $0.setNumber < $1.setNumber }
+            .map { set in
+                let weight = set.weight.map(formatNumber) ?? "–"
+                let reps = set.reps.map(String.init) ?? "–"
+                return "\(weight)×\(reps)"
+            }
+            .joined(separator: " · ")
+    }
 }
 
 struct ExerciseDetail: Codable, Identifiable, Hashable {

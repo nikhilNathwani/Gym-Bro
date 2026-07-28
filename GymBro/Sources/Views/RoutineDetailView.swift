@@ -86,10 +86,13 @@ struct RoutineDetailView: View {
                                 }
                                 .opacity(0)
 
-                                Label("Start Workout", systemImage: "play.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(.vertical, 4)
+                                Label(
+                                    hasLoggedToday(routine) ? "Continue Workout" : "Start Workout",
+                                    systemImage: "play.fill"
+                                )
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, 4)
                             }
                         }
                         .listRowBackground(Color.accentColor)
@@ -180,17 +183,22 @@ struct RoutineDetailView: View {
         .errorAlert($errorMessage)
     }
 
+    // Shows what's already logged today directly under the exercise name —
+    // more informative than a bare checkmark (which only says "something
+    // was logged," not what), and doubles as confirmation of what's about
+    // to be saved without having to open the exercise.
     private func exerciseRow(_ exercise: ExerciseDetail) -> some View {
         NavigationLink(value: AppRoute.exercise(exercise.id)) {
-            HStack {
-                if loggedToday(exercise) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.accentColor)
-                        .accessibilityLabel("Logged today")
-                }
+            VStack(alignment: .leading, spacing: 2) {
                 Text(exercise.name)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
+                if let log = todayLog(exercise), !log.setLogs.isEmpty {
+                    Text(log.setsSummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
             }
         }
     }
@@ -210,8 +218,12 @@ struct RoutineDetailView: View {
         return allExercises.filter { !assignedIds.contains($0.id) }
     }
 
-    private func loggedToday(_ exercise: ExerciseDetail) -> Bool {
-        exercise.exerciseLogs.contains { Calendar.current.isDateInToday($0.createdAt) }
+    private func todayLog(_ exercise: ExerciseDetail) -> ExerciseLog? {
+        exercise.exerciseLogs.first { Calendar.current.isDateInToday($0.createdAt) }
+    }
+
+    private func hasLoggedToday(_ routine: RoutineDetail) -> Bool {
+        routine.routineExercises.contains { todayLog($0.exercise)?.setLogs.isEmpty == false }
     }
 
     private func load() async {

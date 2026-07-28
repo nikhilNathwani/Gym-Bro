@@ -76,12 +76,16 @@ final class GymBroSmokeTests: XCTestCase {
         sleep(1)
         screenshot("01c-exercise-added")
 
-        // 2. "Start Workout" -> full-screen one-exercise-at-a-time flow (see
-        // WorkoutSessionView), landing on the routine's first exercise. The
-        // one we just created is appended last (highest sort_order), so
-        // page forward with Next until it's reached rather than assuming a
-        // fixed exercise count.
-        waitAndTap("Start Workout", exact: true)
+        // 2. "Start Workout"/"Continue Workout" -> full-screen
+        // one-exercise-at-a-time flow (see WorkoutSessionView), landing on
+        // the routine's first exercise. Not an exact match on "Start
+        // Workout" — this routine has a real logged set today already (the
+        // intentional Seated Dumbbell demo entry), so the button reads
+        // "Continue Workout" here, not "Start Workout". The one we just
+        // created is appended last (highest sort_order), so page forward
+        // with Next until it's reached rather than assuming a fixed
+        // exercise count.
+        waitAndTap("Workout")
         screenshot("02-workout-session-start")
 
         // "Next" always exists now (it just disables on the last exercise,
@@ -203,10 +207,21 @@ final class GymBroSmokeTests: XCTestCase {
         sleep(1)
         waitAndTap("Done", exact: true)
         sleep(1)
-        screenshot("06-checkmark-in-list")
+        // The button relabels to "Continue Workout" once today has any
+        // logged sets in the routine, and the exercise row shows an inline
+        // "5×1" preview of what's been logged (the weight-1-plus x2 /
+        // reps-1-plus x1 nudges from step 3, starting from 0) instead of a
+        // bare checkmark.
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "label CONTAINS[c] %@", "Continue Workout"))
+                .firstMatch.waitForExistence(timeout: 5),
+            "Start Workout should relabel to Continue Workout once something's logged today")
+        XCTAssertTrue(app.staticTexts["5×1"].waitForExistence(timeout: 5), "Missing inline logged-sets preview in the list")
+        screenshot("06-logged-preview-in-list")
 
-        // 5. Edit mode: native List with delete/reorder controls, checkmark
-        // should still show there too.
+        // 5. Edit mode: native List with delete/reorder controls, the
+        // inline logged preview should still show there too.
         waitAndTap("Edit", exact: true)
         screenshot("07-edit-mode")
         waitAndTap("Done", exact: true)
