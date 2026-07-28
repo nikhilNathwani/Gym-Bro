@@ -14,7 +14,7 @@ struct ExerciseReferenceSection: View {
         VStack(alignment: .leading, spacing: 12) {
             if let subtitle = controller.exercise.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.body)
                     .foregroundStyle(.secondary)
             }
 
@@ -72,7 +72,7 @@ struct ExerciseReferenceSection: View {
 
             if controller.isCuesExpanded {
                 Text(cues)
-                    .font(.caption)
+                    .font(.body)
                     .foregroundStyle(.secondary)
             }
         }
