@@ -58,7 +58,7 @@
 		7703A8A07881F5692FE9A957 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
 		8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
-		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0D0194362D4B87CCA67A634 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		AB9F7E16A546796ED34B8742 /* InlineExerciseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineExerciseCard.swift; sourceTree = "<group>"; };
@@ -66,7 +66,7 @@
 		B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineDetailView.swift; sourceTree = "<group>"; };
 		B81E1D26EC49432B7163E853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExerciseToRoutineSheet.swift; sourceTree = "<group>"; };
-		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDD229F1100E5DEC28467D5F /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetFieldsEditor.swift; sourceTree = "<group>"; };
 		DCBE44036007B45B296ABCA1 /* GymBroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroApp.swift; sourceTree = "<group>"; };
@@ -231,6 +231,7 @@
 						TestTargetID = 880F96BE0B0D0E044B56C066;
 					};
 					880F96BE0B0D0E044B56C066 = {
+						DevelopmentTeam = 5BWXZ738L7;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -408,7 +409,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J8529PB76;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -448,7 +449,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J8529PB76;
+				DEVELOPMENT_TEAM = 5BWXZ738L7;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

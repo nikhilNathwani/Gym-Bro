@@ -284,6 +284,10 @@ final class SupabaseService {
             .execute()
     }
 
+    func deleteSetLog(id: UUID) async throws {
+        try await client.from("set_logs").delete().eq("id", value: id).execute()
+    }
+
     /// Notes-only update, independent of set_logs — unlike updateLogEntry
     /// (which destructively replaces every set_log), inline editing needs
     /// to touch just the note without disturbing sets edited elsewhere.

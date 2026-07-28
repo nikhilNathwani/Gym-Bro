@@ -46,15 +46,6 @@ final class GymBroSmokeTests: XCTestCase {
             return element
         }
 
-        // Non-asserting existence check, for loop conditions (unlike tapId,
-        // which fails the test if the element is missing).
-        func exists(id identifier: String) -> Bool {
-            app.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier == %@", identifier))
-                .firstMatch
-                .exists
-        }
-
         // 1. Routines tab (default) -> first routine. Routine names are now
         // real stored labels the user can freely rename (not a derived
         // "Routine A - Label" pairing) — match today's actual label rather
@@ -93,9 +84,16 @@ final class GymBroSmokeTests: XCTestCase {
         waitAndTap("Start Workout", exact: true)
         screenshot("02-workout-session-start")
 
+        // "Next" always exists now (it just disables on the last exercise,
+        // there's no separate "Finish" button/state) — page forward while
+        // it's still enabled rather than by existence.
         var advanceGuard = 0
-        while exists(id: "nextExerciseButton") && advanceGuard < 20 {
-            tapId("nextExerciseButton")
+        while advanceGuard < 20 {
+            let next = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "nextExerciseButton"))
+                .firstMatch
+            guard next.exists, next.isEnabled else { break }
+            next.tap()
             advanceGuard += 1
         }
         XCTAssertTrue(app.staticTexts[exerciseName].waitForExistence(timeout: 5), "Did not page to the new exercise")
@@ -104,11 +102,47 @@ final class GymBroSmokeTests: XCTestCase {
         // 3. Log a set via the stepper controls, driven by identifiers keyed
         // by set number (stable regardless of persistence state). Nudging
         // weight/reps lazily creates today's exercise_log on first touch.
+        // Steppers auto-repeat on hold, so a plain tap() (touch-down then
+        // immediately up) should behave as a single increment each time.
         tapId("weight-1-plus")
         tapId("weight-1-plus")
         tapId("reps-1-plus")
         sleep(1)
         screenshot("03-after-stepper-nudge")
+
+        // 3a-pre. Tapping into the weight field brings up the native
+        // keyboard — it should cover the content from the bottom, not push
+        // the Previous/Next bar up to stay visible above it. Dismiss via
+        // the keyboard's own accessory "Done" (app.toolbars, not
+        // app.navigationBars) — the session's own "Done" (exit) button has
+        // the same label and would be ambiguous with a generic search.
+        tapId("weight-1-field")
+        sleep(1)
+        screenshot("03a-pre-keyboard-open")
+        let keyboardDone = app.toolbars.buttons["Done"]
+        XCTAssertTrue(keyboardDone.waitForExistence(timeout: 5), "Missing keyboard accessory Done button")
+        keyboardDone.tap()
+        sleep(1)
+        screenshot("03a-pre-keyboard-dismissed")
+
+        // 3a. "Add set" then undo it via the last row's delete button —
+        // confirms the new delete-last-set affordance both removes the row
+        // and doesn't leave the set count in a broken state.
+        tapId("addSetButton")
+        sleep(1)
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "weight-2-field"))
+                .firstMatch.waitForExistence(timeout: 5),
+            "Add set should create a second row")
+        tapId("deleteLastSetButton")
+        sleep(1)
+        XCTAssertFalse(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "weight-2-field"))
+                .firstMatch.exists,
+            "Deleting the last set should remove its row")
+        screenshot("03b-set-added-then-deleted")
 
         // 3b. Regression check for the reported bug: tapping inert card
         // content (a column header here, not a control and not the "Open

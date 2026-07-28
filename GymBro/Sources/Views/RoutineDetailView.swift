@@ -56,19 +56,6 @@ struct RoutineDetailView: View {
                     }
                     .listRowSeparator(.hidden)
 
-                    if !routine.routineExercises.isEmpty && !isEditing {
-                        Section {
-                            NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
-                                Label("Start Workout", systemImage: "play.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(.vertical, 4)
-                            }
-                        }
-                        .listRowBackground(Color.accentColor)
-                        .foregroundStyle(.white)
-                    }
-
                     Section("Exercises") {
                         if routine.routineExercises.isEmpty {
                             Text("No exercises yet — tap + to add one.")
@@ -82,6 +69,19 @@ struct RoutineDetailView: View {
                                 Task { await moveExercises(from: source, to: destination, routine: routine) }
                             }
                         }
+                    }
+
+                    if !routine.routineExercises.isEmpty && !isEditing {
+                        Section {
+                            NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
+                                Label("Start Workout", systemImage: "play.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, 4)
+                            }
+                        }
+                        .listRowBackground(Color.accentColor)
+                        .foregroundStyle(.white)
                     }
 
                     if isEditing {

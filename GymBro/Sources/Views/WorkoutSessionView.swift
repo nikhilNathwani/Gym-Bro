@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Full-screen, one-exercise-at-a-time logging flow — reached from
 /// `RoutineDetailView`'s "Start Workout" button.
@@ -20,6 +21,11 @@ struct WorkoutSessionView: View {
     @State private var isLoading = true
     @State private var currentIndex: Int
     @State private var errorMessage: String?
+    // Hides the Prev/Next bar while the system keyboard (from tapping into a
+    // stepper's weight/reps field) is up — the keyboard should simply cover
+    // the content from the bottom, not have the nav bar ride up and stay
+    // visible/tappable above it.
+    @State private var isKeyboardVisible = false
 
     @Environment(\.dismiss) private var dismiss
 
@@ -58,6 +64,12 @@ struct WorkoutSessionView: View {
         }
         .task { await load() }
         .errorAlert($errorMessage)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            isKeyboardVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            isKeyboardVisible = false
+        }
     }
 
     private var content: some View {
@@ -73,9 +85,16 @@ struct WorkoutSessionView: View {
             }
             .padding(16)
         }
-        .safeAreaInset(edge: .bottom) { navBar }
+        .safeAreaInset(edge: .bottom) {
+            if !isKeyboardVisible {
+                navBar
+            }
+        }
     }
 
+    // Next is disabled (not hidden behind a separate "Finish" action) on the
+    // last exercise — exiting the session is always the toolbar's "Done"
+    // button, so a distinct Finish button/style wasn't adding anything.
     private var navBar: some View {
         HStack(spacing: 12) {
             Button {
@@ -89,30 +108,19 @@ struct WorkoutSessionView: View {
             .disabled(currentIndex == 0)
             .accessibilityIdentifier("previousExerciseButton")
 
-            if currentIndex == exercises.count - 1 {
-                Button {
-                    dismiss()
-                } label: {
-                    Label("Finish", systemImage: "checkmark")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
+            Button {
+                withAnimation(.snappy(duration: 0.2)) { currentIndex += 1 }
+            } label: {
+                HStack {
+                    Text("Next")
+                    Image(systemName: "chevron.right")
                 }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("finishWorkoutButton")
-            } else {
-                Button {
-                    withAnimation(.snappy(duration: 0.2)) { currentIndex += 1 }
-                } label: {
-                    HStack {
-                        Text("Next")
-                        Image(systemName: "chevron.right")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("nextExerciseButton")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.bordered)
+            .disabled(currentIndex == exercises.count - 1)
+            .accessibilityIdentifier("nextExerciseButton")
         }
         .controlSize(.large)
         .padding(.horizontal, 16)

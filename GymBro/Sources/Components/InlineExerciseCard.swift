@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Inline accordion replacement for the old RoutineExerciseDetailSheet —
 /// expands directly within the routine's exercise list instead of a
@@ -203,6 +204,22 @@ struct InlineExerciseCard: View {
                 onDecrement: { adjustReps(at: index, by: -1) },
                 onIncrement: { adjustReps(at: index, by: 1) }
             )
+
+            // Only the last set can be removed (undoing an accidental "Add
+            // set") — deleting an arbitrary middle set would need to
+            // renumber every set after it, both locally and in the backend,
+            // which isn't worth the complexity for what's really just an
+            // "undo the last add" affordance.
+            if index == sets.count - 1 && sets.count > 1 {
+                Button(action: deleteLastSet) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("deleteLastSetButton")
+            }
         }
     }
 
@@ -219,7 +236,7 @@ struct InlineExerciseCard: View {
         onIncrement: @escaping () -> Void
     ) -> some View {
         HStack(spacing: 2) {
-            stepperButton(systemImage: "minus", identifier: "\(idPrefix)-minus", action: onDecrement)
+            RepeatingStepperButton(systemImage: "minus", identifier: "\(idPrefix)-minus", action: onDecrement)
 
             TextField("", text: text)
                 .keyboardType(keyboardType)
@@ -230,24 +247,10 @@ struct InlineExerciseCard: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityIdentifier("\(idPrefix)-field")
 
-            stepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
+            RepeatingStepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
         }
         .padding(3)
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
-    }
-
-    // 44x44 matches Apple HIG's minimum recommended tap target — the
-    // original 21x21 was too small to hit reliably mid-set at the gym.
-    private func stepperButton(systemImage: String, identifier: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .bold))
-                .frame(width: 44, height: 44)
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(Color.accentColor)
-        .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 9))
-        .accessibilityIdentifier(identifier)
     }
 
     private var addSetButton: some View {
@@ -492,5 +495,79 @@ struct InlineExerciseCard: View {
                 onError(error.localizedDescription)
             }
         }
+    }
+
+    /// Undoes an accidental "Add set" — only ever removes the last row, so
+    /// the remaining sets stay a contiguous 1...N run with no renumbering
+    /// needed either locally or in the backend.
+    private func deleteLastSet() {
+        guard sets.count > 1, let last = sets.popLast() else { return }
+        let setNumber = last.setNumber
+        let previousTask = pendingSetTasks[setNumber]
+        pendingSetTasks[setNumber] = nil
+        guard last.persisted else { return }
+        Task {
+            await previousTask?.value
+            do {
+                try await SupabaseService.shared.deleteSetLog(id: last.id)
+            } catch {
+                onError(error.localizedDescription)
+            }
+        }
+    }
+}
+
+/// A +/- button that increments/decrements once immediately on tap, and
+/// auto-repeats while held down (after a short delay, so a normal tap isn't
+/// mistaken for a hold) — for jumping a weight/rep value by a lot without
+/// mashing the button. Each tick fires a light haptic, echoing a real
+/// mechanical stepper.
+private struct RepeatingStepperButton: View {
+    let systemImage: String
+    let identifier: String
+    let action: () -> Void
+
+    @State private var repeatTask: Task<Void, Never>?
+
+    private let holdDelay: Duration = .milliseconds(450)
+    private let repeatInterval: Duration = .milliseconds(120)
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 15, weight: .bold))
+            .frame(width: 44, height: 44)
+            .foregroundStyle(Color.accentColor)
+            .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 9))
+            .contentShape(Rectangle())
+            .accessibilityIdentifier(identifier)
+            .onLongPressGesture(minimumDuration: 0, maximumDistance: 30, pressing: { pressing in
+                if pressing {
+                    tick()
+                    startHoldTimer()
+                } else {
+                    stopHoldTimer()
+                }
+            }, perform: {})
+    }
+
+    private func tick() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        action()
+    }
+
+    private func startHoldTimer() {
+        repeatTask = Task {
+            try? await Task.sleep(for: holdDelay)
+            guard !Task.isCancelled else { return }
+            while !Task.isCancelled {
+                tick()
+                try? await Task.sleep(for: repeatInterval)
+            }
+        }
+    }
+
+    private func stopHoldTimer() {
+        repeatTask?.cancel()
+        repeatTask = nil
     }
 }
