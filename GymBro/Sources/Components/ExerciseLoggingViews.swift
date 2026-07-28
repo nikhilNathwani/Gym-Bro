@@ -79,19 +79,17 @@ struct ExerciseReferenceSection: View {
     }
 
     private var openFullPageLink: some View {
-        VStack(spacing: 10) {
-            Divider()
-            NavigationLink(value: AppRoute.exercise(controller.exercise.id)) {
-                HStack(spacing: 4) {
-                    Text("Open full exercise page")
-                    Image(systemName: "chevron.right")
-                }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.accentColor)
-                .frame(maxWidth: .infinity)
+        NavigationLink(value: AppRoute.exercise(controller.exercise.id)) {
+            HStack(spacing: 4) {
+                Text("Open full exercise page")
+                Image(systemName: "chevron.right")
             }
-            .buttonStyle(.plain)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.plain)
+        .padding(.top, 6)
     }
 }
 

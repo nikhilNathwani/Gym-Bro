@@ -83,18 +83,25 @@ struct WorkoutSessionView: View {
                 }
                 .padding(16)
             }
-            Divider()
             // One unified block for everything the user actually interacts
-            // with (steppers, notes, Prev/Next) — a translucent glass
-            // material with rounded top corners, echoing Notes' format bar
-            // rising from the bottom of the screen. Tried a fully-saturated
-            // accent-color fill first, but its dark-mode appearance (a much
-            // lighter lavender) made the white/near-black systemBackground
-            // text field chips inside it look mismatched. A material
-            // sidesteps that entirely — `.primary`/`.secondary`/
-            // `Color.accentColor` are already legible on it by design, in
-            // both appearances, so the content below reverts to those
-            // instead of a custom on-background color.
+            // with (steppers, notes, Prev/Next) — a solid purple tray with
+            // rounded top corners, rising from the bottom of the screen
+            // (Notes' format bar is the closest analog). A translucent
+            // `.regularMaterial` was tried first but reads as plain grey on
+            // a static/plain backdrop like this one — no color of its own,
+            // just a blur, so it never actually looked "glass" here. Fully
+            // saturated `Color.accentColor` was tried before that; its
+            // dark-mode shade is a light lavender, which made the
+            // white/near-black systemBackground text-field chips inside it
+            // look mismatched. `DockBackground` (Assets.xcassets) is a
+            // custom color asset instead — a light lavender tint in light
+            // mode, a genuinely dark purple in dark mode — so it stays
+            // purple-tinted rather than neutral grey, and stays close in
+            // tone to the systemBackground chips nested inside it so they
+            // no longer clash. No separate top divider — the rounded
+            // corners plus this color/shape change are already a clear
+            // enough seam; a straight divider line sitting right above a
+            // rounded corner looked like a rendering glitch.
             VStack(spacing: 20) {
                 ExerciseLoggingDock(controller: controller)
                 navBar
@@ -104,7 +111,7 @@ struct WorkoutSessionView: View {
             .padding(.bottom, 14)
             .background(alignment: .top) {
                 UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20)
-                    .fill(.regularMaterial)
+                    .fill(Color("DockBackground"))
                     .ignoresSafeArea(edges: .bottom)
             }
         }
