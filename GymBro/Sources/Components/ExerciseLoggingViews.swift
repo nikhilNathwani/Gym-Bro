@@ -110,28 +110,15 @@ struct ExerciseLoggingDock: View {
     }
     @FocusState private var focusedField: FocusField?
 
+    // Fixed card size — the point of the carousel is that the dock's height
+    // stops growing as sets are added, so every card (including the
+    // trailing "Add set" tile) must agree on one size regardless of content.
+    private let cardWidth: CGFloat = 168
+    private let cardHeight: CGFloat = 200
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Text("SET")
-                    .frame(width: 34, alignment: .leading)
-                Text("WEIGHT")
-                    .frame(maxWidth: .infinity)
-                Text("REPS")
-                    .frame(maxWidth: .infinity)
-            }
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(.primary)
-
-            VStack(spacing: 6) {
-                ForEach(controller.sets) { set in
-                    setRow(set)
-                }
-                HStack {
-                    Spacer()
-                    addSetButton
-                }
-            }
+            setsCarousel
 
             VStack(alignment: .leading, spacing: 5) {
                 Text("NOTES")
@@ -162,19 +149,73 @@ struct ExerciseLoggingDock: View {
         .sensoryFeedback(.impact(weight: .light), trigger: controller.sets.count)
     }
 
-    // Looks up the row's *current* index by id on every access rather than
+    // Sets ride in a horizontally-scrolling row of fixed-size cards instead
+    // of a vertical list of rows — a vertical list kept growing the whole
+    // dock taller with every set added, pushing Notes/Prev/Next further
+    // down; a fixed-height carousel keeps the dock's height constant
+    // regardless of set count, and gives each stepper more room. Weight and
+    // reps are stacked within a card (the "transpose") rather than side by
+    // side in a row. Adding a set scrolls the new (rightmost) card to the
+    // center automatically; earlier sets are still reachable by scrolling
+    // left.
+    private var setsCarousel: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // Keyed by setNumber, not Identifiable's UUID — a set's
+                    // id changes from a local placeholder to the real
+                    // database id the moment it's first persisted (see
+                    // ExerciseLogController), and setNumber is the stable
+                    // identity used everywhere else in this file for
+                    // exactly that reason.
+                    ForEach(controller.sets, id: \.setNumber) { set in
+                        setCard(set)
+                            .id(set.setNumber)
+                    }
+                    addSetCard
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 2)
+            }
+            .onChange(of: controller.sets.count) { _, _ in
+                guard let lastSetNumber = controller.sets.last?.setNumber else { return }
+                withAnimation(.snappy(duration: 0.3)) {
+                    proxy.scrollTo(lastSetNumber, anchor: .center)
+                }
+            }
+        }
+        .frame(height: cardHeight)
+    }
+
+    // Looks up the card's *current* index by id on every access rather than
     // capturing a fixed index — a deleted-last-set can shrink `sets` while a
-    // stale closure for the removed row is still momentarily reachable
+    // stale closure for the removed card is still momentarily reachable
     // (SwiftUI/FocusState's own location-tracking machinery re-evaluates
     // bindings during the transition), and indexing with a captured Int
     // that's now out of bounds crashes. Resolving by id instead just quietly
-    // no-ops once the row is gone.
-    private func setRow(_ set: ExerciseLogController.EditableSet) -> some View {
-        HStack(spacing: 6) {
-            Text("\(set.setNumber)")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
-                .frame(width: 34, alignment: .leading)
+    // no-ops once the card is gone.
+    private func setCard(_ set: ExerciseLogController.EditableSet) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("SET \(set.setNumber)")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+                // Only the last set can be removed (undoing an accidental
+                // "Add set") — deleting an arbitrary middle set would need
+                // to renumber every set after it, both locally and in the
+                // backend, which isn't worth the complexity for what's
+                // really just an "undo the last add" affordance.
+                if set.setNumber == controller.sets.last?.setNumber && controller.sets.count > 1 {
+                    Button(action: controller.deleteLastSet) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("deleteLastSetButton")
+                }
+            }
 
             numericStepper(
                 text: Binding(
@@ -203,28 +244,26 @@ struct ExerciseLoggingDock: View {
                 onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustReps(at: i, by: 1) } }
             )
 
-            // Only the last set can be removed (undoing an accidental "Add
-            // set") — deleting an arbitrary middle set would need to
-            // renumber every set after it, both locally and in the backend,
-            // which isn't worth the complexity for what's really just an
-            // "undo the last add" affordance.
-            if set.id == controller.sets.last?.id && controller.sets.count > 1 {
-                Button(action: controller.deleteLastSet) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28, height: 28)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("deleteLastSetButton")
-            }
+            Spacer(minLength: 0)
         }
+        .padding(12)
+        .frame(width: cardWidth, height: cardHeight, alignment: .leading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
 
     // idPrefix is keyed by set *number* (stable, e.g. "weight-1"), not the
     // set's UUID (which only exists once persisted) — lets UI tests target
     // "the first set's weight stepper" predictably regardless of
     // persistence state.
+    // No "WEIGHT"/"REPS" text label on this control — three different ways
+    // of adding one (a wrapping VStack sibling, an overlay with extra top
+    // padding, a size-neutral offset overlay) all reproduced the exact same
+    // bug: a second rapid tap on the +/- buttons would silently fail to
+    // persist (see HANDOFF.md for the full repro). Root cause wasn't
+    // pinned down — it wasn't specific to any one structural pattern, just
+    // to the presence of any extra view here — so labels were dropped
+    // rather than shipped broken. Weight/reps are still distinguishable by
+    // position (weight always first) and format (decimal vs. integer).
     private func numericStepper(
         text: Binding<String>,
         keyboardType: UIKeyboardType,
@@ -248,20 +287,22 @@ struct ExerciseLoggingDock: View {
             RepeatingStepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
         }
         .padding(3)
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private var addSetButton: some View {
+    private var addSetCard: some View {
         Button(action: controller.addSet) {
-            HStack(spacing: 4) {
-                Image(systemName: "plus")
+            VStack(spacing: 6) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 22))
                 Text("Add set")
+                    .font(.caption.weight(.semibold))
             }
-            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .frame(width: cardWidth * 0.6, height: cardHeight)
         }
-        .accessibilityIdentifier("addSetButton")
         .buttonStyle(.plain)
-        .foregroundStyle(Color.accentColor)
+        .accessibilityIdentifier("addSetButton")
     }
 
     private var notesField: some View {

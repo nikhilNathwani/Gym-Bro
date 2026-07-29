@@ -140,9 +140,6 @@ final class GymBroSmokeTests: XCTestCase {
         sleep(1)
         screenshot("03a-pre-keyboard-dismissed")
 
-        // 3a. "Add set" then undo it via the last row's delete button —
-        // confirms the new delete-last-set affordance both removes the row
-        // and doesn't leave the set count in a broken state.
         tapId("addSetButton")
         sleep(1)
         XCTAssertTrue(
@@ -160,14 +157,14 @@ final class GymBroSmokeTests: XCTestCase {
         screenshot("03b-set-added-then-deleted")
 
         // 3b. Regression check for the reported bug: tapping inert card
-        // content (a column header here, not a control and not the "Open
+        // content (the "SET 1" number here, not a control and not the "Open
         // full exercise page" link) must NOT navigate away. This used to
         // happen because InlineExerciseCard sat inside a List row that also
         // contained a NavigationLink, and List makes the whole row
         // tappable-through to any NavigationLink nested in it — fixed by
         // moving this content out of a List entirely (WorkoutSessionView is
         // a plain ScrollView).
-        waitAndTap("WEIGHT", exact: true)
+        waitAndTap("SET 1", exact: true)
         XCTAssertTrue(app.staticTexts[exerciseName].exists, "Tapping inert card content should not navigate away")
 
         // 4. Open the full exercise page from its explicit link only.

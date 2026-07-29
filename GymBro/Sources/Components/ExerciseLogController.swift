@@ -15,6 +15,17 @@ import Foundation
 /// time's numbers must not silently log a phantom session. A log is only
 /// created lazily, on the first real interaction (a stepper tap, a typed
 /// value, or "Add set"); see `ensureTodayLog()`.
+///
+/// `@MainActor` is required, not decorative: every `commitSet`/`addSet`/
+/// `deleteLastSet` call spins up a `Task` that awaits a network call
+/// (`SupabaseService`, not itself MainActor-isolated) and then reads/writes
+/// `sets` afterward. Without pinning this class to MainActor, that
+/// post-await continuation is free to resume on a background thread,
+/// racing the main thread's synchronous UI-driven mutations to the same
+/// `sets` array — confirmed as a real, reproducible bug (not just a
+/// theoretical one): two rapid stepper taps could lose an update, silently
+/// persisting an earlier value instead of the latest one.
+@MainActor
 @Observable
 final class ExerciseLogController {
     let exercise: ExerciseDetail
@@ -116,7 +127,9 @@ final class ExerciseLogController {
     /// double-tap before the first creation round-trips) share the same
     /// in-flight task instead of each creating their own exercise_log.
     private func ensureTodayLog() async -> UUID? {
-        if let id = todayLogId { return id }
+        if let id = todayLogId {
+            return id
+        }
         if let creatingLogTask {
             return await creatingLogTask.value
         }
@@ -180,7 +193,9 @@ final class ExerciseLogController {
         let task = Task<Void, Never> {
             await previous?.value
             guard let logId = await ensureTodayLog() else { return }
-            guard let i = sets.firstIndex(where: { $0.setNumber == setNumber }) else { return }
+            guard let i = sets.firstIndex(where: { $0.setNumber == setNumber }) else {
+                return
+            }
             let set = sets[i]
             do {
                 if set.persisted {
