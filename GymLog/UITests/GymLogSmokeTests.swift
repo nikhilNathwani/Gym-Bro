@@ -145,6 +145,29 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         screenshot("03-after-stepper-nudge")
 
+        // Regression check: the weight field's width is fixed (not sized
+        // to its current content — a `.fixedSize()` field was tried and
+        // reverted, since it resized on every increment and shifted the
+        // stepper's +/- buttons out from under a finger mid rapid-tap), so
+        // it needs to already be wide enough for a longer value, or that
+        // value visually truncates. Driven entirely via the stepper
+        // (already proven reliable above) rather than typed keyboard
+        // input — simulating keystrokes on a `.decimalPad` field via
+        // XCUITest proved too unreliable to trust for this (deletes
+        // silently dropped, corrupting the value instead of clearing it).
+        let weightField = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "weight-1-field"))
+            .firstMatch
+        let widthAtOneDigit = weightField.frame.width
+        stepperIncrement("weight-1-stepper", times: 38) // 5 -> 100
+        screenshot("03a-weight-value-not-truncated")
+        XCTAssertEqual(
+            weightField.frame.width, widthAtOneDigit, accuracy: 0.5,
+            "Weight field's width shouldn't change with its content — that's what shifts the stepper buttons mid-tap")
+        XCTAssertGreaterThan(
+            weightField.frame.width, 45,
+            "Weight field should be wide enough to show a 3-digit value without truncating")
+
         // 3a-pre. Tapping into the weight field brings up the native
         // keyboard — it should cover the content from the bottom, not push
         // the Previous/Next bar up to stay visible above it. Dismiss via
@@ -154,40 +177,6 @@ final class GymLogSmokeTests: XCTestCase {
         // controls might exist elsewhere on screen).
         tapId("weight-1-field")
         sleep(1)
-
-        // Regression check: the field's width is fixed (not sized to its
-        // current content — a `.fixedSize()` field was tried and reverted,
-        // since it resized on every keystroke/increment and shifted the
-        // stepper's +/- buttons out from under a finger mid rapid-tap), so
-        // it needs to already be wide enough for a longer decimal value
-        // like "37.5" up front, or that value silently truncates to "3..."
-        // on screen. The accessibility `.value` string would still report
-        // "37.5" even while visually clipped, so that's not a meaningful
-        // check — instead confirm the frame stays the *same* width across
-        // a short and a long value (proving the stepper buttons don't
-        // move) and that width is generously wide.
-        let weightField = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == %@", "weight-1-field"))
-            .firstMatch
-        func clearWeightField() {
-            if let currentValue = weightField.value as? String, !currentValue.isEmpty {
-                weightField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count))
-            }
-        }
-        let widthWithShortValue = weightField.frame.width
-        clearWeightField()
-        weightField.typeText("37.5")
-        sleep(1)
-        screenshot("03a-weight-value-not-truncated")
-        XCTAssertEqual(
-            weightField.frame.width, widthWithShortValue, accuracy: 0.5,
-            "Weight field's width shouldn't change with its content — that's what shifts the stepper buttons mid-tap")
-        XCTAssertGreaterThan(
-            weightField.frame.width, 45,
-            "Weight field should be wide enough to show a value like \"37.5\" without truncating")
-        clearWeightField()
-        weightField.typeText("5")
-
         screenshot("03a-pre-keyboard-open")
         let keyboardDone = app.toolbars.buttons["Done"]
         XCTAssertTrue(keyboardDone.waitForExistence(timeout: 5), "Missing keyboard accessory Done button")
@@ -247,15 +236,16 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         // The button relabels to "Continue Workout" once today has any
         // logged sets in the routine, and the exercise row shows an inline
-        // "5×1" preview of what's been logged (the weight-1-plus x2 /
-        // reps-1-plus x1 nudges from step 3, starting from 0) instead of a
-        // bare checkmark.
+        // "100×1" preview of what's been logged (weight ends at "100"
+        // after the truncation regression check above drove it there via
+        // the stepper; reps-1-plus x1 from step 3, starting from 0)
+        // instead of a bare checkmark.
         XCTAssertTrue(
             app.descendants(matching: .any)
                 .matching(NSPredicate(format: "label CONTAINS[c] %@", "Continue Workout"))
                 .firstMatch.waitForExistence(timeout: 5),
             "Start Workout should relabel to Continue Workout once something's logged today")
-        XCTAssertTrue(app.staticTexts["5×1"].waitForExistence(timeout: 5), "Missing inline logged-sets preview in the list")
+        XCTAssertTrue(app.staticTexts["100×1"].waitForExistence(timeout: 5), "Missing inline logged-sets preview in the list")
         screenshot("06-logged-preview-in-list")
 
         // 4b. The Start/Continue Workout button is a separate entry point
