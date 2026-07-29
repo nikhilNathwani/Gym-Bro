@@ -9,14 +9,15 @@ import SwiftUI
 /// to get to the next one) didn't actually solve anything. Here the current
 /// exercise takes the whole screen and Prev/Next page between exercises.
 ///
-/// The screen is split into two independent regions sharing one
-/// `ExerciseLogController`: read-only reference material (title, target,
-/// last time, cues, open-full-page link) scrolls independently at the top,
-/// while the actual input controls — set steppers, notes, and Prev/Next —
-/// are collocated in one fixed dock at the bottom. The user only ever
-/// interacts with one exercise's inputs at a time and asked for those
-/// controls (plus the nav to move between exercises) to read as a single
-/// widget rather than being separated by whatever's currently scrolled.
+/// One native `List` for the whole screen (reference material, sets,
+/// notes) rather than a scrolling region glued to a separately-styled fixed
+/// "dock" — that split, plus the dock's custom color and custom stepper
+/// buttons, was a design-review finding of its own (see the workout-flow
+/// design audit): most of what read as "homemade" here was reinventing
+/// things iOS already has idiomatic answers for. Prev/Next now live in a
+/// real `.toolbar(.bottomBar)`, which is the system's own answer to
+/// "controls that stay reachable below scrolling content" — no custom tray
+/// needed.
 struct WorkoutSessionView: View {
     let routineId: UUID
     let startIndex: Int
@@ -26,6 +27,7 @@ struct WorkoutSessionView: View {
     @State private var currentIndex: Int
     @State private var errorMessage: String?
     @State private var controller: ExerciseLogController?
+    @FocusState private var focusedField: LoggingFocusField?
 
     init(routineId: UUID, startIndex: Int) {
         self.routineId = routineId
@@ -64,6 +66,45 @@ struct WorkoutSessionView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // The keyboard's own "Done" accessory commits whatever's
+            // focused by clearing focus, which the `onChange` below turns
+            // into an actual save — matches every other text-entry screen
+            // in the app.
+            if focusedField != nil {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { focusedField = nil }
+                }
+            }
+            // Native bottom toolbar — a real system-drawn bar, not a
+            // custom-colored tray, so Prev/Next stay reachable without
+            // scrolling regardless of how long the sets list gets. Next is
+            // disabled (not hidden behind a separate "Finish" action) on
+            // the last exercise — exiting the session is always the back
+            // chevron, so a distinct Finish control wasn't adding anything.
+            if !exercises.isEmpty {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    Button(action: goToPrevious) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Previous")
+                        }
+                    }
+                    .disabled(currentIndex == 0)
+                    .accessibilityIdentifier("previousExerciseButton")
+
+                    Spacer()
+
+                    Button(action: goToNext) {
+                        HStack(spacing: 4) {
+                            Text("Next")
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                    .disabled(currentIndex == exercises.count - 1)
+                    .accessibilityIdentifier("nextExerciseButton")
+                }
+            }
         }
         .task { await load() }
         // Only re-creates the controller when moving to a different
@@ -71,115 +112,41 @@ struct WorkoutSessionView: View {
         // exercise's own logging (onLogged) must NOT reset it, or the user
         // would lose whatever they're mid-editing.
         .onChange(of: currentIndex) { _, _ in setUpController() }
-        // Covers Prev/Next buttons and the swipe gesture in one place,
-        // since both just mutate currentIndex.
+        // Commits whatever field just lost focus (tapped away, or the
+        // keyboard's own Done button above) — same pattern as every other
+        // text-entry screen in the app.
+        .onChange(of: focusedField) { oldValue, _ in
+            guard let oldValue, let controller else { return }
+            switch oldValue {
+            case .weight(let id): if let i = controller.setIndex(for: id) { controller.commitWeightText(at: i) }
+            case .reps(let id): if let i = controller.setIndex(for: id) { controller.commitRepsText(at: i) }
+            case .notes: controller.commitNotes()
+            }
+        }
+        // Covers Prev/Next paging and add/delete-set, since all three just
+        // mutate a count/index.
         .sensoryFeedback(.selection, trigger: currentIndex)
+        .sensoryFeedback(.impact(weight: .light), trigger: controller?.sets.count)
         .errorAlert($errorMessage)
     }
 
     private func page(_ controller: ExerciseLogController) -> some View {
-        VStack(spacing: 0) {
-            ScrollView {
+        List {
+            Section {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(exercises[currentIndex].name)
                         .font(.title.bold())
                     ExerciseReferenceSection(controller: controller)
                 }
-                .padding(16)
+                .padding(.vertical, 4)
             }
-            // Swipe left/right over the reference area as a shortcut for
-            // Next/Previous — `simultaneousGesture` (not `gesture`) so it
-            // doesn't steal the ScrollView's own vertical pan, and it only
-            // acts once a drag is clearly more horizontal than vertical, so
-            // a normal scroll attempt never accidentally pages an exercise.
-            // Scoped to this scrollable area only, not the input dock below
-            // — swiping over a text field or stepper should stay text-field/
-            // stepper behavior, not page navigation. Ignores drags starting
-            // near the left edge, since that's also where the system's own
-            // interactive swipe-to-go-back gesture lives — without this, a
-            // right-swipe there could simultaneously page to Previous *and*
-            // pop the screen.
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 24)
-                    .onEnded { value in
-                        guard value.startLocation.x > 40 else { return }
-                        let horizontal = value.translation.width
-                        let vertical = value.translation.height
-                        guard abs(horizontal) > abs(vertical), abs(horizontal) > 60 else { return }
-                        if horizontal < 0 {
-                            goToNext()
-                        } else {
-                            goToPrevious()
-                        }
-                    }
-            )
-            // One unified block for everything the user actually interacts
-            // with (steppers, notes, Prev/Next) — a solid purple tray with
-            // rounded top corners, rising from the bottom of the screen
-            // (Notes' format bar is the closest analog). A translucent
-            // `.regularMaterial` was tried first but reads as plain grey on
-            // a static/plain backdrop like this one — no color of its own,
-            // just a blur, so it never actually looked "glass" here. Fully
-            // saturated `Color.accentColor` was tried before that; its
-            // dark-mode shade is a light lavender, which made the
-            // white/near-black systemBackground text-field chips inside it
-            // look mismatched. `DockBackground` (Assets.xcassets) is a
-            // custom color asset instead — a light lavender tint in light
-            // mode, a genuinely dark purple in dark mode — so it stays
-            // purple-tinted rather than neutral grey, and stays close in
-            // tone to the systemBackground chips nested inside it so they
-            // no longer clash. No separate top divider — the rounded
-            // corners plus this color/shape change are already a clear
-            // enough seam; a straight divider line sitting right above a
-            // rounded corner looked like a rendering glitch.
-            VStack(spacing: 20) {
-                ExerciseLoggingDock(controller: controller)
-                navBar
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 20)
-            .padding(.bottom, 14)
-            .background(alignment: .top) {
-                UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20)
-                    .fill(Color("DockBackground"))
-                    .ignoresSafeArea(edges: .bottom)
-            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+
+            ExerciseLoggingSections(controller: controller, focusedField: $focusedField)
         }
-    }
-
-    // Next is disabled (not hidden behind a separate "Finish" action) on the
-    // last exercise — exiting the session is always the back chevron, so a
-    // distinct Finish button/style wasn't adding anything.
-    //
-    // Text-only, not filled/bordered pills — this is secondary paging nav
-    // (closer to Mail's thread prev/next links), and the previous bordered
-    // buttons read as a second hero control competing with the actual
-    // logging inputs above them.
-    private var navBar: some View {
-        HStack {
-            Button(action: goToPrevious) {
-                Label("Previous", systemImage: "chevron.left")
-                    .font(.subheadline.weight(.semibold))
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(currentIndex == 0 ? Color(.tertiaryLabel) : Color.accentColor)
-            .disabled(currentIndex == 0)
-            .accessibilityIdentifier("previousExerciseButton")
-
-            Spacer()
-
-            Button(action: goToNext) {
-                HStack(spacing: 4) {
-                    Text("Next")
-                    Image(systemName: "chevron.right")
-                }
-                .font(.subheadline.weight(.semibold))
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(currentIndex == exercises.count - 1 ? Color(.tertiaryLabel) : Color.accentColor)
-            .disabled(currentIndex == exercises.count - 1)
-            .accessibilityIdentifier("nextExerciseButton")
-        }
+        .listStyle(.insetGrouped)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private func goToPrevious() {

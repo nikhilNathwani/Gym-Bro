@@ -33,6 +33,22 @@ final class GymBroSmokeTests: XCTestCase {
             element.tap()
         }
 
+        // A real SwiftUI `Stepper` bridges to UIKit's `UIStepper` under the
+        // hood, which exposes its decrement/increment halves as two child
+        // buttons (boundBy 0/1) rather than a single `.increment()`-able
+        // element. Giving it a custom (interactive) label view — needed
+        // here so the value stays directly editable — means it doesn't
+        // reliably show up under the typed `app.steppers` query, so this
+        // searches all descendants by identifier like `tapId` does.
+        func stepperIncrement(_ identifier: String, times: Int = 1) {
+            let stepper = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", identifier))
+                .firstMatch
+            XCTAssertTrue(stepper.waitForExistence(timeout: 8), "Missing stepper: \(identifier)")
+            let incrementButton = stepper.buttons.element(boundBy: 1)
+            for _ in 0..<times { incrementButton.tap() }
+        }
+
         // RootTabView keeps both tabs' view hierarchies always mounted (to
         // preserve each tab's own nav state across switches), so a hidden
         // tab's fields still turn up in `app.textFields` queries even though
@@ -94,33 +110,38 @@ final class GymBroSmokeTests: XCTestCase {
         XCTAssertTrue(reachedTitle.isHittable, "Matched exercise title isn't actually visible on screen")
         screenshot("02b-reached-new-exercise")
 
-        // 2c. Swipe left/right over the reference area as a Prev/Next
-        // shortcut. We're on the last exercise, so swipe-left (Next) must
-        // be a no-op; swipe-right moves to Previous; swipe-left again
-        // returns to this same exercise.
-        app.swipeLeft()
+        // 2c. Prev/Next paging via the native bottom toolbar. We're on the
+        // last exercise, so tapping Next must be a no-op (it's `.disabled`,
+        // but a bottom-bar toolbar button's `.isEnabled` isn't reliably
+        // exposed to XCUITest, so this checks the actual behavior instead
+        // of the flag); Previous moves to the previous exercise; Next then
+        // returns to this one. (An earlier version of this screen also
+        // supported a swipe-over-the-reference-area shortcut for the same
+        // thing, but that custom gesture fought with List's own built-in
+        // swipe handling once the reference content moved into a List row
+        // — dropped in favor of relying solely on the native toolbar,
+        // which is always reachable anyway.)
+        tapId("nextExerciseButton")
         sleep(1)
-        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Swiping past the last exercise should be a no-op")
+        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Next should be a no-op on the last exercise")
 
-        app.swipeRight()
+        tapId("previousExerciseButton")
         sleep(1)
-        XCTAssertFalse(app.staticTexts[exerciseName].exists, "Swipe-right should move to the previous exercise")
+        XCTAssertFalse(app.staticTexts[exerciseName].exists, "Previous should move to the previous exercise")
 
-        app.swipeLeft()
+        tapId("nextExerciseButton")
         sleep(1)
         XCTAssertTrue(
             app.staticTexts[exerciseName].waitForExistence(timeout: 5),
-            "Swipe-left should return to the new exercise")
-        screenshot("02c-after-swipe")
+            "Next should return to the new exercise")
+        screenshot("02c-after-paging")
 
-        // 3. Log a set via the stepper controls, driven by identifiers keyed
-        // by set number (stable regardless of persistence state). Nudging
-        // weight/reps lazily creates today's exercise_log on first touch.
-        // Steppers auto-repeat on hold, so a plain tap() (touch-down then
-        // immediately up) should behave as a single increment each time.
-        tapId("weight-1-plus")
-        tapId("weight-1-plus")
-        tapId("reps-1-plus")
+        // 3. Log a set via the real Stepper controls, driven by identifiers
+        // keyed by set number (stable regardless of persistence state).
+        // Nudging weight/reps lazily creates today's exercise_log on first
+        // touch.
+        stepperIncrement("weight-1-stepper", times: 2)
+        stepperIncrement("reps-1-stepper")
         sleep(1)
         screenshot("03-after-stepper-nudge")
 
@@ -142,30 +163,33 @@ final class GymBroSmokeTests: XCTestCase {
 
         tapId("addSetButton")
         sleep(1)
-        XCTAssertTrue(
-            app.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier == %@", "weight-2-field"))
-                .firstMatch.waitForExistence(timeout: 5),
-            "Add set should create a second row")
-        tapId("deleteLastSetButton")
+        let set2Row = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "set-2-row"))
+            .firstMatch
+        XCTAssertTrue(set2Row.waitForExistence(timeout: 5), "Add set should create a second row")
+        // Real `.swipeActions`, not a persistent trash icon — swipe the row
+        // to reveal the destructive "Delete" action, then tap it.
+        set2Row.swipeLeft()
+        waitAndTap("Delete", exact: true)
         sleep(1)
         XCTAssertFalse(
             app.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier == %@", "weight-2-field"))
+                .matching(NSPredicate(format: "identifier == %@", "set-2-row"))
                 .firstMatch.exists,
             "Deleting the last set should remove its row")
         screenshot("03b-set-added-then-deleted")
 
-        // 3b. Regression check for the reported bug: tapping inert card
-        // content (the "SET 1" number here, not a control and not the "Open
-        // full exercise page" link) must NOT navigate away. This used to
-        // happen because InlineExerciseCard sat inside a List row that also
+        // 3b. Regression check for the reported bug: tapping inert row
+        // content ("Set 1" here, not a control and not the "Open full
+        // exercise page" link) must NOT navigate away. This used to happen
+        // because InlineExerciseCard sat inside a List row that also
         // contained a NavigationLink, and List makes the whole row
-        // tappable-through to any NavigationLink nested in it — fixed by
-        // moving this content out of a List entirely (WorkoutSessionView is
-        // a plain ScrollView).
-        waitAndTap("SET 1", exact: true)
-        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Tapping inert card content should not navigate away")
+        // tappable-through to any NavigationLink nested in it — the Sets
+        // section's rows here have no NavigationLink in them at all, so
+        // this is now structurally not possible, but the assertion stays
+        // as regression insurance.
+        waitAndTap("Set 1", exact: true)
+        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Tapping inert row content should not navigate away")
 
         // 4. Open the full exercise page from its explicit link only.
         waitAndTap("Open full exercise page")

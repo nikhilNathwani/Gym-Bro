@@ -3,10 +3,7 @@ import UIKit
 
 /// Read-only reference material for the exercise currently on screen in
 /// `WorkoutSessionView`: target/subtitle, a peek at last time's numbers,
-/// cues, and the link to the full exercise page. Lives in the session's
-/// independently-scrolling top region — separate from `ExerciseLoggingDock`,
-/// which is fixed at the bottom alongside Prev/Next, since the user only
-/// ever needs to glance at this material, not interact with it.
+/// cues, and the link to the full exercise page.
 struct ExerciseReferenceSection: View {
     let controller: ExerciseLogController
 
@@ -94,295 +91,177 @@ struct ExerciseReferenceSection: View {
     }
 }
 
-/// The fixed bottom "input toolbar" for the current exercise: WEIGHT/REPS
-/// set steppers, "Add set", and Notes — collocated with
-/// `WorkoutSessionView`'s own Prev/Next in one dock (see that file), since
-/// the user only ever works with one exercise at a time and wanted the
-/// controls for it grouped as a single widget rather than scrolling apart
-/// from each other.
-struct ExerciseLoggingDock: View {
+/// Which text field currently has keyboard focus, shared between the sets
+/// section and the notes field so `WorkoutSessionView` can commit a value
+/// the moment focus leaves it (see its `onChange(of:)`).
+enum LoggingFocusField: Hashable {
+    case weight(UUID)
+    case reps(UUID)
+    case notes
+}
+
+/// The current exercise's sets + notes, as native `List` `Section`s — meant
+/// to be placed directly inside a `List` (see `WorkoutSessionView`), not
+/// used standalone. Leans entirely on stock components rather than custom
+/// ones: a real `Section` header instead of a hand-drawn all-caps label, a
+/// real `Stepper` for each weight/reps value instead of a custom-drawn +/-
+/// button pair, and real `.swipeActions` for undoing the last set instead
+/// of a persistent trash icon. An earlier version of this screen reinvented
+/// all three, which is most of why it read as a custom "fitness dashboard"
+/// rather than an iOS form.
+struct ExerciseLoggingSections: View {
     let controller: ExerciseLogController
-
-    private enum FocusField: Hashable {
-        case weight(UUID)
-        case reps(UUID)
-        case notes
-    }
-    @FocusState private var focusedField: FocusField?
-
-    // Fixed card size — the point of the carousel is that the dock's height
-    // stops growing as sets are added, so every card (including the
-    // trailing "Add set" tile) must agree on one size regardless of content.
-    private let cardWidth: CGFloat = 168
-    private let cardHeight: CGFloat = 188
+    var focusedField: FocusState<LoggingFocusField?>.Binding
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            setsCarousel
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text("NOTES")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.primary)
-                notesField
-            }
-        }
-        .onChange(of: focusedField) { oldValue, _ in
-            guard let oldValue else { return }
-            switch oldValue {
-            case .weight(let id): if let i = controller.setIndex(for: id) { controller.commitWeightText(at: i) }
-            case .reps(let id): if let i = controller.setIndex(for: id) { controller.commitRepsText(at: i) }
-            case .notes: controller.commitNotes()
-            }
-        }
-        .toolbar {
-            if focusedField != nil {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { focusedField = nil }
-                }
-            }
-        }
-        // Covers both "Add set" and the per-row delete — both change the
-        // set count, and matching the stepper buttons' own light-impact
-        // feel keeps the whole dock's haptic language consistent.
-        .sensoryFeedback(.impact(weight: .light), trigger: controller.sets.count)
-    }
-
-    // Sets ride in a horizontally-scrolling row of fixed-size cards instead
-    // of a vertical list of rows — a vertical list kept growing the whole
-    // dock taller with every set added, pushing Notes/Prev/Next further
-    // down; a fixed-height carousel keeps the dock's height constant
-    // regardless of set count, and gives each stepper more room. Weight and
-    // reps are stacked within a card (the "transpose") rather than side by
-    // side in a row. Adding a set scrolls the new (rightmost) card to the
-    // center automatically; earlier sets are still reachable by scrolling
-    // left.
-    //
-    // The row is center-aligned within the available width (via the
-    // `.frame(minWidth:)` below) rather than pinned to the leading edge —
-    // with just one set, that set sits dead center where you'd naturally
-    // keep tapping, and adding a second set keeps that first card exactly
-    // where it was instead of the whole row jumping left to make room.
-    // Once there are enough cards to overflow the available width, this has
-    // no visible effect and the row behaves like a normal scrolling list.
-    private var setsCarousel: some View {
-        GeometryReader { geometry in
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        // Keyed by setNumber, not Identifiable's UUID — a
-                        // set's id changes from a local placeholder to the
-                        // real database id the moment it's first persisted
-                        // (see ExerciseLogController), and setNumber is the
-                        // stable identity used everywhere else in this file
-                        // for exactly that reason.
-                        ForEach(controller.sets, id: \.setNumber) { set in
-                            setCard(set)
-                                .id(set.setNumber)
+        Section("Sets") {
+            ForEach(controller.sets, id: \.setNumber) { set in
+                setRow(set)
+                    // The row's identifier lives on an invisible full-size
+                    // background marker, not on the row's own content —
+                    // putting it directly on the row (with or without
+                    // `.accessibilityElement(children:)`) was found to
+                    // either override the two child `Stepper`s' own
+                    // identifiers, or make the weight/reps `TextField`s
+                    // stop registering as hittable. A same-size background
+                    // sibling carries an identity for tests to find and
+                    // swipe without touching the real content's own
+                    // accessibility tree at all.
+                    .background(Color.clear.accessibilityIdentifier("set-\(set.setNumber)-row"))
+                    .swipeActions(edge: .trailing) {
+                        // Only the last set can be removed (undoing an
+                        // accidental "Add Set") — deleting an arbitrary
+                        // middle set would need to renumber every set after
+                        // it, both locally and in the backend, which isn't
+                        // worth the complexity for what's really just an
+                        // "undo the last add" affordance.
+                        if isLastRemovable(set) {
+                            Button(role: .destructive, action: controller.deleteLastSet) {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
-                        addSetCard
                     }
-                    .padding(.horizontal, 2)
-                    .padding(.vertical, 2)
-                    .frame(minWidth: geometry.size.width, alignment: .center)
-                }
-                .onChange(of: controller.sets.count) { _, _ in
-                    guard let lastSetNumber = controller.sets.last?.setNumber else { return }
-                    withAnimation(.snappy(duration: 0.3)) {
-                        proxy.scrollTo(lastSetNumber, anchor: .center)
-                    }
-                }
             }
+            Button(action: controller.addSet) {
+                Label("Add Set", systemImage: "plus.circle.fill")
+            }
+            .accessibilityIdentifier("addSetButton")
         }
-        .frame(height: cardHeight)
+
+        Section("Notes") {
+            TextField(
+                "Add a note for today…",
+                text: Binding(get: { controller.notesDraft }, set: { controller.notesDraft = $0 }),
+                axis: .vertical
+            )
+            .lineLimit(2...6)
+            .focused(focusedField, equals: .notes)
+            .accessibilityIdentifier("notesField")
+        }
     }
 
-    // Looks up the card's *current* index by id on every access rather than
-    // capturing a fixed index — a deleted-last-set can shrink `sets` while a
-    // stale closure for the removed card is still momentarily reachable
-    // (SwiftUI/FocusState's own location-tracking machinery re-evaluates
-    // bindings during the transition), and indexing with a captured Int
-    // that's now out of bounds crashes. Resolving by id instead just quietly
-    // no-ops once the card is gone.
-    private func setCard(_ set: ExerciseLogController.EditableSet) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func isLastRemovable(_ set: ExerciseLogController.EditableSet) -> Bool {
+        set.setNumber == controller.sets.last?.setNumber && controller.sets.count > 1
+    }
+
+    private func previousSummary(for set: ExerciseLogController.EditableSet) -> String? {
+        guard let lastTime = controller.lastTime else { return nil }
+        guard let match = lastTime.setLogs.first(where: { $0.setNumber == set.setNumber }) else { return nil }
+        let weight = match.weight.map(formatNumber) ?? "–"
+        let reps = match.reps.map(String.init) ?? "–"
+        return "Last: \(weight)×\(reps)"
+    }
+
+    private func setRow(_ set: ExerciseLogController.EditableSet) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                // Toned down to match the WEIGHT/REPS caption style below it
-                // (tiny, secondary, bold) — at the subheadline/primary size
-                // it was previously set at, this read as louder than
-                // anything else in the control, out of step with a label
-                // that's really just a corner tag, not a heading.
-                Text("SET \(set.setNumber)")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
+                Text("Set \(set.setNumber)")
+                    .font(.subheadline.weight(.medium))
                 Spacer()
-                // Only the last set can be removed (undoing an accidental
-                // "Add set") — deleting an arbitrary middle set would need
-                // to renumber every set after it, both locally and in the
-                // backend, which isn't worth the complexity for what's
-                // really just an "undo the last add" affordance.
-                if set.setNumber == controller.sets.last?.setNumber && controller.sets.count > 1 {
-                    Button(action: controller.deleteLastSet) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("deleteLastSetButton")
+                if let previous = previousSummary(for: set) {
+                    Text(previous)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
             }
 
-            numericStepper(
-                label: "WEIGHT",
-                text: Binding(
-                    get: { controller.setIndex(for: set.id).map { controller.sets[$0].weightText } ?? set.weightText },
-                    set: { newValue in
-                        if let i = controller.setIndex(for: set.id) { controller.sets[i].weightText = newValue }
-                    }
-                ),
-                keyboardType: .decimalPad,
-                focusField: .weight(set.id),
-                idPrefix: "weight-\(set.setNumber)",
-                onDecrement: { if let i = controller.setIndex(for: set.id) { controller.adjustWeight(at: i, by: -2.5) } },
-                onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustWeight(at: i, by: 2.5) } }
-            )
-            numericStepper(
-                label: "REPS",
-                text: Binding(
-                    get: { controller.setIndex(for: set.id).map { controller.sets[$0].repsText } ?? set.repsText },
-                    set: { newValue in
-                        if let i = controller.setIndex(for: set.id) { controller.sets[i].repsText = newValue }
-                    }
-                ),
-                keyboardType: .numberPad,
-                focusField: .reps(set.id),
-                idPrefix: "reps-\(set.setNumber)",
-                onDecrement: { if let i = controller.setIndex(for: set.id) { controller.adjustReps(at: i, by: -1) } },
-                onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustReps(at: i, by: 1) } }
-            )
-
-            Spacer(minLength: 0)
+            HStack(spacing: 14) {
+                fieldStepper(
+                    label: "Weight",
+                    text: Binding(
+                        get: { controller.setIndex(for: set.id).map { controller.sets[$0].weightText } ?? set.weightText },
+                        set: { newValue in
+                            if let i = controller.setIndex(for: set.id) { controller.sets[i].weightText = newValue }
+                        }
+                    ),
+                    keyboardType: .decimalPad,
+                    focusCase: .weight(set.id),
+                    idPrefix: "weight-\(set.setNumber)",
+                    onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustWeight(at: i, by: 2.5) } },
+                    onDecrement: { if let i = controller.setIndex(for: set.id) { controller.adjustWeight(at: i, by: -2.5) } }
+                )
+                fieldStepper(
+                    label: "Reps",
+                    text: Binding(
+                        get: { controller.setIndex(for: set.id).map { controller.sets[$0].repsText } ?? set.repsText },
+                        set: { newValue in
+                            if let i = controller.setIndex(for: set.id) { controller.sets[i].repsText = newValue }
+                        }
+                    ),
+                    keyboardType: .numberPad,
+                    focusCase: .reps(set.id),
+                    idPrefix: "reps-\(set.setNumber)",
+                    onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustReps(at: i, by: 1) } },
+                    onDecrement: { if let i = controller.setIndex(for: set.id) { controller.adjustReps(at: i, by: -1) } }
+                )
+            }
         }
-        .padding(12)
-        .frame(width: cardWidth, height: cardHeight, alignment: .leading)
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .padding(.vertical, 4)
     }
 
     // idPrefix is keyed by set *number* (stable, e.g. "weight-1"), not the
     // set's UUID (which only exists once persisted) — lets UI tests target
     // "the first set's weight stepper" predictably regardless of
     // persistence state.
-    private func numericStepper(
+    //
+    // The value is a plain, independent `TextField` next to a labelless
+    // `Stepper`, not a `TextField` embedded as the Stepper's own label —
+    // that was tried first (letting the Stepper host the editable value
+    // directly, so tapping either the number or +/- lived in one visual
+    // unit), but a `Stepper` apparently claims touch handling across its
+    // whole reported frame, *including* over its label — the embedded
+    // field stopped registering as tappable at all. Two plain siblings
+    // (`Stepper("", ...)` + `.labelsHidden()` is the standard way to show
+    // a stepper with no visible label text) sidesteps that entirely: the
+    // system stepper still gives press-and-hold repeat and VoiceOver
+    // support for free, and the field stays independently tappable for
+    // jumping straight to a specific typed value.
+    private func fieldStepper(
         label: String,
         text: Binding<String>,
         keyboardType: UIKeyboardType,
-        focusField: FocusField,
+        focusCase: LoggingFocusField,
         idPrefix: String,
-        onDecrement: @escaping () -> Void,
-        onIncrement: @escaping () -> Void
+        onIncrement: @escaping () -> Void,
+        onDecrement: @escaping () -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(label)
-                .font(.system(size: 10, weight: .bold))
+                .font(.caption2)
                 .foregroundStyle(.secondary)
-
-            HStack(spacing: 2) {
-                RepeatingStepperButton(systemImage: "minus", identifier: "\(idPrefix)-minus", action: onDecrement)
-
+            HStack(spacing: 10) {
                 TextField("", text: text)
                     .keyboardType(keyboardType)
-                    .multilineTextAlignment(.center)
-                    .font(.subheadline.weight(.bold))
+                    .font(.body.weight(.semibold))
                     .monospacedDigit()
-                    .focused($focusedField, equals: focusField)
-                    .frame(maxWidth: .infinity)
+                    .focused(focusedField, equals: focusCase)
+                    .frame(width: 34)
                     .accessibilityIdentifier("\(idPrefix)-field")
-
-                RepeatingStepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
-            }
-            .padding(3)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
-        }
-    }
-
-    private var addSetCard: some View {
-        Button(action: controller.addSet) {
-            VStack(spacing: 6) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 22))
-                Text("Add set")
-                    .font(.caption.weight(.semibold))
-            }
-            .foregroundStyle(Color.accentColor)
-            .frame(width: cardWidth * 0.6, height: cardHeight)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("addSetButton")
-    }
-
-    private var notesField: some View {
-        TextField("Add a note for today…", text: Binding(get: { controller.notesDraft }, set: { controller.notesDraft = $0 }), axis: .vertical)
-            .font(.subheadline)
-            .lineLimit(2...6)
-            .focused($focusedField, equals: .notes)
-            .padding(9)
-            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 10))
-            .accessibilityIdentifier("notesField")
-    }
-}
-
-/// A +/- button that increments/decrements once immediately on tap, and
-/// auto-repeats while held down (after a short delay, so a normal tap isn't
-/// mistaken for a hold) — for jumping a weight/rep value by a lot without
-/// mashing the button. Each tick fires a light haptic, echoing a real
-/// mechanical stepper.
-private struct RepeatingStepperButton: View {
-    let systemImage: String
-    let identifier: String
-    let action: () -> Void
-
-    @State private var repeatTask: Task<Void, Never>?
-
-    private let holdDelay: Duration = .milliseconds(450)
-    private let repeatInterval: Duration = .milliseconds(120)
-
-    var body: some View {
-        Image(systemName: systemImage)
-            .font(.system(size: 15, weight: .bold))
-            .frame(width: 44, height: 44)
-            .foregroundStyle(Color.accentColor)
-            .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 9))
-            .contentShape(Rectangle())
-            .accessibilityIdentifier(identifier)
-            .onLongPressGesture(minimumDuration: 0, maximumDistance: 30, pressing: { pressing in
-                if pressing {
-                    tick()
-                    startHoldTimer()
-                } else {
-                    stopHoldTimer()
-                }
-            }, perform: {})
-    }
-
-    private func tick() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        action()
-    }
-
-    private func startHoldTimer() {
-        repeatTask = Task {
-            try? await Task.sleep(for: holdDelay)
-            guard !Task.isCancelled else { return }
-            while !Task.isCancelled {
-                tick()
-                try? await Task.sleep(for: repeatInterval)
+                Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
+                    .labelsHidden()
+                    .accessibilityIdentifier("\(idPrefix)-stepper")
             }
         }
-    }
-
-    private func stopHoldTimer() {
-        repeatTask?.cancel()
-        repeatTask = nil
     }
 }
