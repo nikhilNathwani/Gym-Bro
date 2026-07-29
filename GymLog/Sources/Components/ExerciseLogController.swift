@@ -12,9 +12,15 @@ import Foundation
 ///
 /// Deliberately does NOT create a workout_session/exercise_log just because
 /// the exercise is being viewed — merely reading cues or checking last
-/// time's numbers must not silently log a phantom session. A log is only
-/// created lazily, on the first real interaction (a stepper tap, a typed
-/// value, or "Add set"); see `ensureTodayLog()`.
+/// time's numbers must not silently log a phantom session. A log (and each
+/// set within it) is only created lazily, the moment "Add Set" is tapped;
+/// see `ensureTodayLog()`. This includes the very first set — there's no
+/// pre-filled draft row a stepper tap silently turns into a real log
+/// anymore (an earlier version worked that way, but a set that happened to
+/// match the pre-filled default then never got logged at all, since
+/// nothing ever "changed" — tapping "Add Set" itself is now the only thing
+/// that logs a set, matching the explicit action every other set already
+/// requires).
 ///
 /// `@MainActor` is required, not decorative: every `commitSet`/`addSet`/
 /// `deleteLastSet` call spins up a `Task` that awaits a network call
@@ -102,7 +108,12 @@ final class ExerciseLogController {
     private func seed() {
         if let todayLog = exercise.exerciseLogs.first(where: { Calendar.current.isDateInToday($0.createdAt) }) {
             todayLogId = todayLog.id
-            let existing = todayLog.setLogs
+            // Can legitimately be empty — deleting the last set (down to
+            // zero) leaves a real, childless exercise_log row behind rather
+            // than deleting it outright (see `deleteLastSet`), and every
+            // read of it already treats zero sets as "not logged today"
+            // (`RoutineDetailView.hasLoggedToday`/`exerciseRow`).
+            sets = todayLog.setLogs
                 .sorted { $0.setNumber < $1.setNumber }
                 .map { set in
                     EditableSet(
@@ -115,25 +126,22 @@ final class ExerciseLogController {
                         persisted: true
                     )
                 }
-            sets = existing.isEmpty ? [draftFirstSet()] : existing
             notesDraft = todayLog.notes ?? ""
             lastCommittedNotes = todayLog.notes
         } else {
             todayLogId = nil
-            sets = [draftFirstSet()]
+            sets = []
             notesDraft = ""
             lastCommittedNotes = nil
         }
     }
 
-    private func draftFirstSet() -> EditableSet {
+    /// Sensible starting values for the very first set of a fresh session —
+    /// last time's first set, if there is one — used only as `addSet()`'s
+    /// pre-filled suggestion, not to silently create a row on its own.
+    private func firstSetDefaults() -> (weight: Double, reps: Int) {
         let lastSet = lastTime?.setLogs.sorted { $0.setNumber < $1.setNumber }.first
-        let weight = lastSet?.weight ?? 0
-        let reps = lastSet?.reps ?? 0
-        return EditableSet(
-            id: UUID(), setNumber: 1, weight: weight, reps: reps,
-            weightText: formatNumber(weight), repsText: String(reps), persisted: false
-        )
+        return (lastSet?.weight ?? 0, lastSet?.reps ?? 0)
     }
 
     func setIndex(for id: UUID) -> Int? {
@@ -242,18 +250,13 @@ final class ExerciseLogController {
         Task {
             guard let logId = await ensureTodayLog() else { return }
             do {
-                // Persist any still-draft rows first (the initial unsaved row).
-                for i in sets.indices where !sets[i].persisted {
-                    let newId = try await SupabaseService.shared.createSetLog(
-                        exerciseLogId: logId, setNumber: sets[i].setNumber,
-                        weight: sets[i].weight, reps: sets[i].reps)
-                    sets[i].id = newId
-                    sets[i].persisted = true
-                }
-                // "Add set" is a deliberate action, so the new row persists immediately.
-                let last = sets.last
-                let weight = last?.weight ?? 0
-                let reps = last?.reps ?? 0
+                // Repeats the previous set's own values if there is one;
+                // otherwise (the very first set of the session) falls back
+                // to last time's numbers as a starting suggestion. Either
+                // way "Add set" is a deliberate action, so the new row
+                // persists immediately.
+                let weight = sets.last?.weight ?? firstSetDefaults().weight
+                let reps = sets.last?.reps ?? firstSetDefaults().reps
                 let setNumber = sets.count + 1
                 let newId = try await SupabaseService.shared.createSetLog(
                     exerciseLogId: logId, setNumber: setNumber, weight: weight, reps: reps)
@@ -283,11 +286,22 @@ final class ExerciseLogController {
         }
     }
 
-    /// Undoes an accidental "Add set" — only ever removes the last row, so
-    /// the remaining sets stay a contiguous 1...N run with no renumbering
-    /// needed either locally or in the backend.
+    /// Undoes an "Add set" — only ever removes the last row, so the
+    /// remaining sets stay a contiguous 1...N run with no renumbering
+    /// needed either locally or in the backend. Can now empty the list
+    /// entirely (the first set is no different from any other latest set —
+    /// see the type doc comment) — that's not a special case here, since
+    /// every read of `sets`/the persisted log already treats zero sets as
+    /// "nothing logged today."
     func deleteLastSet() {
-        guard sets.count > 1, let last = sets.popLast() else { return }
+        guard let last = sets.popLast() else { return }
+        // `effectiveExpandedSetNumber` already falls back to the new last
+        // set whenever `expandedSetNumber` is nil, but if it was pointing
+        // at this now-deleted set *explicitly* (set via tapping this exact
+        // row open while it also happened to be the last one), it would
+        // otherwise keep pointing at a set number that no longer exists —
+        // leaving every remaining row collapsed with nothing active.
+        if expandedSetNumber == last.setNumber { expandedSetNumber = nil }
         let setNumber = last.setNumber
         let previousTask = pendingSetTasks[setNumber]
         pendingSetTasks[setNumber] = nil

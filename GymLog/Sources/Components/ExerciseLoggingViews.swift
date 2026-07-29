@@ -179,7 +179,7 @@ struct ExerciseLoggingSections: View {
     }
 
     private func isLastRemovable(_ set: ExerciseLogController.EditableSet) -> Bool {
-        set.setNumber == controller.sets.last?.setNumber && controller.sets.count > 1
+        set.setNumber == controller.sets.last?.setNumber
     }
 
     private func previousSummary(for set: ExerciseLogController.EditableSet) -> String? {
@@ -299,10 +299,11 @@ struct ExerciseLoggingSections: View {
         onIncrement: @escaping () -> Void,
         onDecrement: @escaping () -> Void
     ) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 0) {
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .padding(.bottom, 2)
             TextField("", text: text)
                 .keyboardType(keyboardType)
                 .font(.title2.weight(.semibold))
@@ -313,18 +314,12 @@ struct ExerciseLoggingSections: View {
                 // without ever needing to grow — a `.fixedSize()` field
                 // (tried first, to fix truncation on longer values) resized
                 // on every keystroke/increment, which shifted the stepper's
-                // +/- buttons out from under a finger mid rapid-tap. Extra
-                // top padding here (vs. none below, before the stepper)
-                // gives the label a bit more breathing room while keeping
-                // the value directly adjacent to the stepper — that's the
-                // pairing actually used on every tap, so it gets the
-                // tighter spacing; the label above is read only for
-                // orientation, not interacted with.
-                .padding(.top, 4)
+                // +/- buttons out from under a finger mid rapid-tap.
                 .frame(width: 64)
                 .accessibilityIdentifier("\(idPrefix)-field")
             Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
                 .labelsHidden()
+                .padding(.top, 10)
                 .accessibilityIdentifier("\(idPrefix)-stepper")
         }
         .frame(maxWidth: .infinity)

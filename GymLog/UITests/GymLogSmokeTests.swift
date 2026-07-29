@@ -136,10 +136,20 @@ final class GymLogSmokeTests: XCTestCase {
             "Next should return to the new exercise")
         screenshot("02c-after-paging")
 
-        // 3. Log a set via the real Stepper controls, driven by identifiers
-        // keyed by set number (stable regardless of persistence state).
-        // Nudging weight/reps lazily creates today's exercise_log on first
-        // touch.
+        // 3. There are no sets by default — even the first one needs an
+        // explicit "Add Set" tap (see `ExerciseLogController`'s type doc
+        // comment), which lazily creates today's exercise_log at the same
+        // time. Then log it via the real Stepper controls, driven by
+        // identifiers keyed by set number (stable regardless of
+        // persistence state). This exercise has no prior history, so the
+        // new set starts at 0×0.
+        XCTAssertFalse(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "weight-1-stepper"))
+                .firstMatch.exists,
+            "A fresh exercise should start with zero sets, not a pre-filled draft one")
+        tapId("addSetButton")
+        sleep(1)
         stepperIncrement("weight-1-stepper", times: 2)
         stepperIncrement("reps-1-stepper")
         sleep(1)
