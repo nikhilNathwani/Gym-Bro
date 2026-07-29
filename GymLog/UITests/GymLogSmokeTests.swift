@@ -268,17 +268,57 @@ final class GymLogSmokeTests: XCTestCase {
         let nameField = textField(placeholder: "Exercise name")
         nameField.tap()
         nameField.typeText(" (edited)")
+
+        // Give this fresh exercise some cues text (it has none by
+        // default) so the tap-safety regression check below — back on
+        // the workout screen — has real inert content to tap, not just
+        // the empty "Open full exercise page" link on its own.
+        waitAndTap("Edit", exact: true) // page-level edit mode
+        waitAndTap("Edit", exact: true) // cues-specific edit mode (the only "Edit" left once the page-level one above relabels to "Done")
+        let cuesEditor = app.textViews.firstMatch
+        XCTAssertTrue(cuesEditor.waitForExistence(timeout: 5), "Missing cues text editor")
+        cuesEditor.tap()
+        cuesEditor.typeText("Test cue for tap-safety check")
+        nameField.tap() // moves focus off the cues editor, triggering its save-on-blur
+        sleep(1)
+        screenshot("04a-cues-added")
+
         waitAndTap("History")
         sleep(1)
         screenshot("05-name-edited")
 
         // Back to the workout session (single pop within the same
-        // NavigationStack), then back again to exit the session to the
-        // routine's plain list. No separate "Done" button anymore — this
-        // screen is pushed, not presented as a sheet, so the standard back
-        // chevron is the only exit affordance now (see WorkoutSessionView).
+        // NavigationStack) — screen is pushed, not presented as a sheet,
+        // so the standard back chevron is the only exit affordance now
+        // (see WorkoutSessionView).
         app.navigationBars.buttons.element(boundBy: 0).tap()
         sleep(1)
+
+        // 4a. Regression check for a bug fixed this session: tapping the
+        // Cues section's inert content (its text here — not the "Open
+        // full exercise page" link) must NOT navigate away. This happened
+        // because `ExerciseCuesSection` put both the cues content and the
+        // link's `NavigationLink` in one shared List row/Section, and List
+        // makes the whole row/Section tappable-through to any
+        // `NavigationLink` nested in it (same class of bug, and this
+        // codebase's second run-in with it, as the "Set 1" check above) —
+        // splitting them into fully separate `Section`s (see that type's
+        // doc comment) fixed it structurally, but this assertion stays as
+        // regression insurance.
+        //
+        // Checks for the Prev/Next toolbar rather than `exerciseName`'s
+        // static text — the name was edited above (now
+        // "...Inline  (edited)Logging", not the literal `exerciseName`
+        // string), so a check against the original name would always fail
+        // here regardless of navigation and silently prove nothing.
+        waitAndTap("Test cue for tap-safety check", exact: true)
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier == %@", "nextExerciseButton"))
+                .firstMatch.exists,
+            "Tapping the cues text should not navigate away from the workout session")
+
+        // Now exit the session back to the routine's plain list.
         app.navigationBars.buttons.element(boundBy: 0).tap()
         sleep(1)
         // The button relabels to "Continue Workout" once today has any

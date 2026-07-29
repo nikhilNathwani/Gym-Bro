@@ -58,14 +58,36 @@ struct ExerciseCuesSection: View {
     let controller: ExerciseLogController
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let cues = controller.exercise.cues, !cues.isEmpty {
+        // Two entirely separate `Section`s, not just separate rows within
+        // one shared `Section` (tried that first — see git history) —
+        // `List` apparently wires an entire *Section's* tap area to
+        // navigate when it finds exactly one `NavigationLink` descendant
+        // anywhere in it, not just the specific row the link is in. A
+        // same-Section split still let tapping the Cues header, its
+        // bullet text, or blank space around either one silently jump to
+        // the full exercise page — confirmed by an XCUITest regression
+        // check added alongside this fix, which caught the same-Section
+        // version failing. Fully separate `Section`s removes the ambiguity
+        // instead of relying on row boundaries within one.
+        if let cues = controller.exercise.cues, !cues.isEmpty {
+            Section {
                 cuesSection(cues)
+                    .sensoryFeedback(.selection, trigger: controller.isCuesExpanded)
+                    // Corner-radius clip clearance (see the analogous
+                    // comment in WorkoutSessionView) — this Section has
+                    // only this one row, so both its corners are rounded.
+                    .padding(.vertical, 14)
             }
-
-            openFullPageLink
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
         }
-        .sensoryFeedback(.selection, trigger: controller.isCuesExpanded)
+
+        Section {
+            openFullPageLink
+                .padding(.vertical, 14)
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
     }
 
     private func cuesSection(_ cues: String) -> some View {
@@ -103,7 +125,6 @@ struct ExerciseCuesSection: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
-        .padding(.top, 6)
     }
 }
 

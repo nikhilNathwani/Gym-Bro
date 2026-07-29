@@ -165,14 +165,11 @@ struct WorkoutSessionView: View {
 
             ExerciseLoggingSections(controller: controller, focusedField: $focusedField)
 
-            Section {
-                ExerciseCuesSection(controller: controller)
-                    // Same rounded-corner-clip reasoning as above — this is
-                    // also a single-row section with zero horizontal insets.
-                    .padding(.vertical, 14)
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
+            // Owns its own `Section`(s)/row-insets/corner-clip padding
+            // internally (see its type doc comment) — it's two separate
+            // single-row `Section`s, not one, so it can't just be wrapped
+            // the same way the title section above is.
+            ExerciseCuesSection(controller: controller)
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)
