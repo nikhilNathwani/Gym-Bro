@@ -1,4 +1,4 @@
-name: GymBro
+name: GymLog
 options:
   bundleIdPrefix: com.nikhilnathwani
   deploymentTarget:
@@ -11,7 +11,7 @@ packages:
     url: https://github.com/supabase/supabase-swift
     from: 2.53.0
 targets:
-  GymBro:
+  GymLog:
     type: application
     platform: iOS
     sources:
@@ -23,11 +23,12 @@ targets:
       path: Sources/Info.plist
       properties:
         UILaunchScreen: {}
+        CFBundleDisplayName: Gym Log
         SupabaseURL: https://$(SUPABASE_HOST)
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymbro
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymlog
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
         DEVELOPMENT_TEAM: "5BWXZ738L7"
@@ -37,14 +38,14 @@ targets:
     attributes:
       DevelopmentTeam: "5BWXZ738L7"
       ProvisioningStyle: Automatic
-  GymBroUITests:
+  GymLogUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
       - UITests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymbro.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.nikhilnathwani.gymlog.uitests
         SWIFT_VERSION: "5.0"
         DEVELOPMENT_TEAM: "5BWXZ738L7"
         CODE_SIGN_STYLE: Automatic
@@ -53,4 +54,4 @@ targets:
       DevelopmentTeam: "5BWXZ738L7"
       ProvisioningStyle: Automatic
     dependencies:
-      - target: GymBro
+      - target: GymLog

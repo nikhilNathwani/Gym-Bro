@@ -132,7 +132,7 @@ struct RoutineDetailView: View {
         // No nav bar title at all — just the back chevron. The routine name
         // is the heading at the top of the list instead (see body), same
         // Apple Notes "open a folder" treatment as the account/settings
-        // icons replacing "Gym Bro" on the routines list itself.
+        // icons replacing "Gym Log" on the routines list itself.
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

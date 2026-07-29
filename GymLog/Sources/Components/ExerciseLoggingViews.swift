@@ -1,10 +1,14 @@
 import SwiftUI
 import UIKit
 
-/// Read-only reference material for the exercise currently on screen in
-/// `WorkoutSessionView`: target/subtitle, a peek at last time's numbers,
-/// cues, and the link to the full exercise page.
-struct ExerciseReferenceSection: View {
+/// Read-only summary shown *above* the logging controls in
+/// `WorkoutSessionView`: target/subtitle and a peek at last time's numbers.
+/// Kept separate from `ExerciseCuesSection` (cues + the full-page link,
+/// shown *below* the logging controls) so the sets/notes UI always sits
+/// directly under this, with nothing to scroll past to reach it — cues are
+/// something you'd check before starting a set, not something that needs
+/// to sit between "last time" and the actual inputs.
+struct ExerciseSummarySection: View {
     let controller: ExerciseLogController
 
     var body: some View {
@@ -18,14 +22,7 @@ struct ExerciseReferenceSection: View {
             if let lastTime = controller.lastTime {
                 lastTimeSection(lastTime)
             }
-
-            if let cues = controller.exercise.cues, !cues.isEmpty {
-                cuesSection(cues)
-            }
-
-            openFullPageLink
         }
-        .sensoryFeedback(.selection, trigger: controller.isCuesExpanded)
     }
 
     private func lastTimeSection(_ log: ExerciseLog) -> some View {
@@ -50,6 +47,25 @@ struct ExerciseReferenceSection: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+}
+
+/// Cues + the link to the full exercise page — shown *below* the logging
+/// controls (see `ExerciseSummarySection`), since cues are reference
+/// material worth checking before a set, not something that needs to be
+/// pinned above the inputs themselves.
+struct ExerciseCuesSection: View {
+    let controller: ExerciseLogController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let cues = controller.exercise.cues, !cues.isEmpty {
+                cuesSection(cues)
+            }
+
+            openFullPageLink
+        }
+        .sensoryFeedback(.selection, trigger: controller.isCuesExpanded)
     }
 
     private func cuesSection(_ cues: String) -> some View {
@@ -114,7 +130,7 @@ struct ExerciseLoggingSections: View {
     var focusedField: FocusState<LoggingFocusField?>.Binding
 
     var body: some View {
-        Section("Sets") {
+        Section("Today's Log") {
             ForEach(controller.sets, id: \.setNumber) { set in
                 setRow(set)
                     // The row's identifier lives on an invisible full-size

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct GymBroApp: App {
+struct GymLogApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabView()

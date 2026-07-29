@@ -1,6 +1,6 @@
 import XCTest
 
-final class GymBroSmokeTests: XCTestCase {
+final class GymLogSmokeTests: XCTestCase {
     func testGoldenPath() throws {
         let app = XCUIApplication()
         app.launch()

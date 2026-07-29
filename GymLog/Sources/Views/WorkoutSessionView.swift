@@ -130,13 +130,19 @@ struct WorkoutSessionView: View {
         .errorAlert($errorMessage)
     }
 
+    // Logging controls sit directly under the title/Last Time summary, not
+    // below Cues — the user said having to scroll past cues to reach the
+    // actual inputs bothered them, and cues are something you'd check
+    // before a set anyway, not something that needs to be pinned above the
+    // inputs. Cues + the full exercise page link move to the bottom
+    // instead.
     private func page(_ controller: ExerciseLogController) -> some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(exercises[currentIndex].name)
                         .font(.title.bold())
-                    ExerciseReferenceSection(controller: controller)
+                    ExerciseSummarySection(controller: controller)
                 }
                 .padding(.vertical, 4)
             }
@@ -144,6 +150,13 @@ struct WorkoutSessionView: View {
             .listRowInsets(EdgeInsets())
 
             ExerciseLoggingSections(controller: controller, focusedField: $focusedField)
+
+            Section {
+                ExerciseCuesSection(controller: controller)
+                    .padding(.vertical, 4)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)

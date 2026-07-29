@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		01068E93AA7EE45C4B95B1D2 /* GymBroSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */; };
+		01068E93AA7EE45C4B95B1D2 /* GymLogSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23953C1184141D5EDD2C823F /* GymLogSmokeTests.swift */; };
 		2318A9EB4DAD89E8EA2AC116 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 556ACE6462B2C1240D04C4D9 /* RootTabView.swift */; };
 		285931C0233AFC1FF890F692 /* ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597E34A0F8186E4B08FB1AA0 /* ExerciseDetailView.swift */; };
 		2F01D41AB659FA3D429137AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F07B56C2A208DF2AA907E6A /* Assets.xcassets */; };
@@ -16,7 +16,7 @@
 		440F95EE3EF47F2F7F25C1F6 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7703A8A07881F5692FE9A957 /* AppRoute.swift */; };
 		457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */; };
 		7579B6E2368562EFAF10BA61 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D0194362D4B87CCA67A634 /* Models.swift */; };
-		78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE44036007B45B296ABCA1 /* GymBroApp.swift */; };
+		78FDEE721B6F6EDABEFEDE3A /* GymLogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE44036007B45B296ABCA1 /* GymLogApp.swift */; };
 		8349909158B2A4B638AB8FAD /* NewExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35149503214E7AEC5C567893 /* NewExerciseView.swift */; };
 		8C1DE0ECEC546BAB2D7AB003 /* RoutineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */; };
 		8E575A8CB9BF947ABA747440 /* RoutinesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */; };
@@ -40,13 +40,13 @@
 			containerPortal = 81AF65F84AF2CDDD90C220B4 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 880F96BE0B0D0E044B56C066;
-			remoteInfo = GymBro;
+			remoteInfo = GymLog;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1BD6B37C1278153DA04685E3 /* LogEntryFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogEntryFormView.swift; sourceTree = "<group>"; };
-		23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroSmokeTests.swift; sourceTree = "<group>"; };
+		23953C1184141D5EDD2C823F /* GymLogSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymLogSmokeTests.swift; sourceTree = "<group>"; };
 		27868B4B943BCB8F173FDA7B /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
 		2F39CDDD9B0F037BC36AC103 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		351241EC06DA2B4E9128D348 /* ExerciseLogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLogController.swift; sourceTree = "<group>"; };
@@ -60,7 +60,7 @@
 		7703A8A07881F5692FE9A957 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		7B000DD73E7605CD3DB9F2F1 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
 		8B295DDC410F10784E9DEFBD /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
-		90052BCC0E3A87460DB29661 /* GymBro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymBro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		90052BCC0E3A87460DB29661 /* GymLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C1B72EEE0D9725A5360963C /* ExerciseLoggingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLoggingViews.swift; sourceTree = "<group>"; };
 		A0D0194362D4B87CCA67A634 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
@@ -68,10 +68,10 @@
 		B705DFDBE1DAEDEC6D1C861D /* RoutineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineDetailView.swift; sourceTree = "<group>"; };
 		B81E1D26EC49432B7163E853 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C0A94FF0F140291809393B00 /* AddExerciseToRoutineSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExerciseToRoutineSheet.swift; sourceTree = "<group>"; };
-		C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymBroUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1BBA7C32B1144C56C7CDC4D /* GymLogUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GymLogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDD229F1100E5DEC28467D5F /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		D549C66E759CEA4A28C917F7 /* SetFieldsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetFieldsEditor.swift; sourceTree = "<group>"; };
-		DCBE44036007B45B296ABCA1 /* GymBroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymBroApp.swift; sourceTree = "<group>"; };
+		DCBE44036007B45B296ABCA1 /* GymLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymLogApp.swift; sourceTree = "<group>"; };
 		EA6F7D3E59E7F5BE40FBEFC3 /* HistoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryEntryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -90,8 +90,8 @@
 		0DCBC2225F9C5FA3947357E7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				90052BCC0E3A87460DB29661 /* GymBro.app */,
-				C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */,
+				90052BCC0E3A87460DB29661 /* GymLog.app */,
+				C1BBA7C32B1144C56C7CDC4D /* GymLogUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,7 +114,7 @@
 		29B5D283C48C82AB6A7479DE = {
 			isa = PBXGroup;
 			children = (
-				FCC2F96ECFAE62138466F407 /* GymBro */,
+				FCC2F96ECFAE62138466F407 /* GymLog */,
 				D9D50EC7FA69D9E7CE42F203 /* Sources */,
 				42D981DCB336E3E93112A786 /* UITests */,
 				0DCBC2225F9C5FA3947357E7 /* Products */,
@@ -134,7 +134,7 @@
 		42D981DCB336E3E93112A786 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
-				23953C1184141D5EDD2C823F /* GymBroSmokeTests.swift */,
+				23953C1184141D5EDD2C823F /* GymLogSmokeTests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -160,7 +160,7 @@
 			isa = PBXGroup;
 			children = (
 				5F07B56C2A208DF2AA907E6A /* Assets.xcassets */,
-				DCBE44036007B45B296ABCA1 /* GymBroApp.swift */,
+				DCBE44036007B45B296ABCA1 /* GymLogApp.swift */,
 				B81E1D26EC49432B7163E853 /* Info.plist */,
 				675D6D5EBAED5464934CEFC6 /* Components */,
 				306674D8113205DC778C799C /* Data */,
@@ -169,21 +169,21 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		FCC2F96ECFAE62138466F407 /* GymBro */ = {
+		FCC2F96ECFAE62138466F407 /* GymLog */ = {
 			isa = PBXGroup;
 			children = (
 				A9E72CD12A04226E9E22CF6F /* Secrets.xcconfig */,
 			);
-			name = GymBro;
+			name = GymLog;
 			path = .;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		47872A12F3A7B305B5BB007C /* GymBroUITests */ = {
+		47872A12F3A7B305B5BB007C /* GymLogUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymBroUITests" */;
+			buildConfigurationList = 753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymLogUITests" */;
 			buildPhases = (
 				08D27791AB5E453E107D0C7F /* Sources */,
 			);
@@ -192,16 +192,16 @@
 			dependencies = (
 				67FB1D3D77458C12C9AECE5A /* PBXTargetDependency */,
 			);
-			name = GymBroUITests;
+			name = GymLogUITests;
 			packageProductDependencies = (
 			);
-			productName = GymBroUITests;
-			productReference = C1BBA7C32B1144C56C7CDC4D /* GymBroUITests.xctest */;
+			productName = GymLogUITests;
+			productReference = C1BBA7C32B1144C56C7CDC4D /* GymLogUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		880F96BE0B0D0E044B56C066 /* GymBro */ = {
+		880F96BE0B0D0E044B56C066 /* GymLog */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */;
+			buildConfigurationList = A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymLog" */;
 			buildPhases = (
 				2829CBF22D8A2F1608698F54 /* Sources */,
 				1109C5FA3E866524EB5088CC /* Resources */,
@@ -211,12 +211,12 @@
 			);
 			dependencies = (
 			);
-			name = GymBro;
+			name = GymLog;
 			packageProductDependencies = (
 				5F0B24793216F6AB7DDF461E /* Supabase */,
 			);
-			productName = GymBro;
-			productReference = 90052BCC0E3A87460DB29661 /* GymBro.app */;
+			productName = GymLog;
+			productReference = 90052BCC0E3A87460DB29661 /* GymLog.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -234,12 +234,11 @@
 						TestTargetID = 880F96BE0B0D0E044B56C066;
 					};
 					880F96BE0B0D0E044B56C066 = {
-						DevelopmentTeam = 5BWXZ738L7;
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */;
+			buildConfigurationList = 4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymLog" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -256,8 +255,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				880F96BE0B0D0E044B56C066 /* GymBro */,
-				47872A12F3A7B305B5BB007C /* GymBroUITests */,
+				880F96BE0B0D0E044B56C066 /* GymLog */,
+				47872A12F3A7B305B5BB007C /* GymLogUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -278,7 +277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01068E93AA7EE45C4B95B1D2 /* GymBroSmokeTests.swift in Sources */,
+				01068E93AA7EE45C4B95B1D2 /* GymLogSmokeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -293,7 +292,7 @@
 				BCD4F7C3DE0EC4D90AFD0BB1 /* ExerciseLibraryView.swift in Sources */,
 				DA347365A056C60DDB745387 /* ExerciseLogController.swift in Sources */,
 				DEF0FFE07608567B5296300E /* ExerciseLoggingViews.swift in Sources */,
-				78FDEE721B6F6EDABEFEDE3A /* GymBroApp.swift in Sources */,
+				78FDEE721B6F6EDABEFEDE3A /* GymLogApp.swift in Sources */,
 				457810A4029EAC2C0A16A726 /* HistoryEntryView.swift in Sources */,
 				CF9051FAF8FFDFF80528B640 /* LogEntryFormView.swift in Sources */,
 				316183FA6FBC47E20AA950FB /* LogSummaryView.swift in Sources */,
@@ -316,7 +315,7 @@
 /* Begin PBXTargetDependency section */
 		67FB1D3D77458C12C9AECE5A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 880F96BE0B0D0E044B56C066 /* GymBro */;
+			target = 880F96BE0B0D0E044B56C066 /* GymLog */;
 			targetProxy = 550B41BAEFF3170FE7EC1222 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -398,11 +397,11 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymlog.uitests;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = GymBro;
+				TEST_TARGET_NAME = GymLog;
 			};
 			name = Release;
 		};
@@ -413,13 +412,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				DEVELOPMENT_TEAM = 4J8529PB76;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymlog;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -438,11 +437,11 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymlog.uitests;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = GymBro;
+				TEST_TARGET_NAME = GymLog;
 			};
 			name = Debug;
 		};
@@ -453,13 +452,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5BWXZ738L7;
+				DEVELOPMENT_TEAM = 4J8529PB76;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymbro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nikhilnathwani.gymlog;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -526,7 +525,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymBro" */ = {
+		4E83B702DC1C96F015BDE5D1 /* Build configuration list for PBXProject "GymLog" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				032F31A760A01EED3667D97C /* Debug */,
@@ -535,7 +534,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymBroUITests" */ = {
+		753E59DDE80FA8527D560A00 /* Build configuration list for PBXNativeTarget "GymLogUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A0B7CE9931158004A65EE87A /* Debug */,
@@ -544,7 +543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymBro" */ = {
+		A2FE653BAF26F2153B50AC2F /* Build configuration list for PBXNativeTarget "GymLog" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				24918BE2D0F03E7CBAE7F13B /* Debug */,
