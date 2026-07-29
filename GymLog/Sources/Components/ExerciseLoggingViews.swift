@@ -144,13 +144,15 @@ struct ExerciseLoggingSections: View {
                     // swipe without touching the real content's own
                     // accessibility tree at all.
                     .background(Color.clear.accessibilityIdentifier("set-\(set.setNumber)-row"))
-                    .swipeActions(edge: .trailing) {
-                        // Only the last set can be removed (undoing an
-                        // accidental "Add Set") — deleting an arbitrary
-                        // middle set would need to renumber every set after
-                        // it, both locally and in the backend, which isn't
-                        // worth the complexity for what's really just an
-                        // "undo the last add" affordance.
+                    // Only the last set can be removed (undoing an
+                    // accidental "Add Set") — deleting an arbitrary middle
+                    // set would need to renumber every set after it, both
+                    // locally and in the backend, which isn't worth the
+                    // complexity for what's really just an "undo the last
+                    // add" affordance. `allowsFullSwipe: false` forces an
+                    // explicit tap on "Delete" rather than letting a full
+                    // swipe silently auto-delete a set.
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if isLastRemovable(set) {
                             Button(role: .destructive, action: controller.deleteLastSet) {
                                 Label("Delete", systemImage: "trash")
@@ -189,6 +191,17 @@ struct ExerciseLoggingSections: View {
     }
 
     private func setRow(_ set: ExerciseLogController.EditableSet) -> some View {
+        Group {
+            if set.setNumber == controller.effectiveExpandedSetNumber {
+                expandedSetRow(set)
+            } else {
+                collapsedSetRow(set)
+            }
+        }
+    }
+
+    /// The active set: full weight/reps steppers, editable.
+    private func expandedSetRow(_ set: ExerciseLogController.EditableSet) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Set \(set.setNumber)")
@@ -204,7 +217,7 @@ struct ExerciseLoggingSections: View {
 
             HStack(spacing: 14) {
                 fieldStepper(
-                    label: "Weight",
+                    label: "Weight (lbs)",
                     text: Binding(
                         get: { controller.setIndex(for: set.id).map { controller.sets[$0].weightText } ?? set.weightText },
                         set: { newValue in
@@ -236,6 +249,30 @@ struct ExerciseLoggingSections: View {
         .padding(.vertical, 4)
     }
 
+    /// A completed set — collapsed to one line, no stepper. Tapping it
+    /// brings the steppers back for the rare case of correcting an
+    /// already-logged set — same tap-to-expand convention as the "Cues"
+    /// header below (`ExerciseCuesSection.cuesSection`), not a new idiom.
+    private func collapsedSetRow(_ set: ExerciseLogController.EditableSet) -> some View {
+        Button {
+            controller.expandedSetNumber = set.setNumber
+        } label: {
+            HStack {
+                Text("Set \(set.setNumber)")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text("\(formatNumber(set.weight)) × \(set.reps)")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     // idPrefix is keyed by set *number* (stable, e.g. "weight-1"), not the
     // set's UUID (which only exists once persisted) — lets UI tests target
     // "the first set's weight stepper" predictably regardless of
@@ -262,32 +299,34 @@ struct ExerciseLoggingSections: View {
         onIncrement: @escaping () -> Void,
         onDecrement: @escaping () -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(spacing: 2) {
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            HStack(spacing: 10) {
-                TextField("", text: text)
-                    .keyboardType(keyboardType)
-                    .font(.body.weight(.semibold))
-                    .monospacedDigit()
-                    .focused(focusedField, equals: focusCase)
-                    // Fixed width, generous enough for a value like
-                    // "137.5" without ever needing to grow — a `.fixedSize()`
-                    // field (tried first, to fix truncation on longer
-                    // values) resized on every keystroke/increment, which
-                    // shifted the stepper's +/- buttons out from under a
-                    // finger mid rapid-tap. Left-aligned (the box's fixed
-                    // width is what keeps the stepper stable, not the text
-                    // alignment) so the digits line up with the "Weight"/
-                    // "Reps" caption above instead of drifting right for
-                    // short values.
-                    .frame(width: 54, alignment: .leading)
-                    .accessibilityIdentifier("\(idPrefix)-field")
-                Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
-                    .labelsHidden()
-                    .accessibilityIdentifier("\(idPrefix)-stepper")
-            }
+            TextField("", text: text)
+                .keyboardType(keyboardType)
+                .font(.title2.weight(.semibold))
+                .monospacedDigit()
+                .multilineTextAlignment(.center)
+                .focused(focusedField, equals: focusCase)
+                // Fixed width, generous enough for a value like "137.5"
+                // without ever needing to grow — a `.fixedSize()` field
+                // (tried first, to fix truncation on longer values) resized
+                // on every keystroke/increment, which shifted the stepper's
+                // +/- buttons out from under a finger mid rapid-tap. Extra
+                // top padding here (vs. none below, before the stepper)
+                // gives the label a bit more breathing room while keeping
+                // the value directly adjacent to the stepper — that's the
+                // pairing actually used on every tap, so it gets the
+                // tighter spacing; the label above is read only for
+                // orientation, not interacted with.
+                .padding(.top, 4)
+                .frame(width: 64)
+                .accessibilityIdentifier("\(idPrefix)-field")
+            Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
+                .labelsHidden()
+                .accessibilityIdentifier("\(idPrefix)-stepper")
         }
+        .frame(maxWidth: .infinity)
     }
 }

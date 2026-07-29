@@ -127,6 +127,10 @@ struct WorkoutSessionView: View {
         // mutate a count/index.
         .sensoryFeedback(.selection, trigger: currentIndex)
         .sensoryFeedback(.impact(weight: .light), trigger: controller?.sets.count)
+        // Every stepper +/- tap (`stepTick`) and switching which set is
+        // active via the "Edit" swipe action (`expandedSetNumber`).
+        .sensoryFeedback(.impact(weight: .light), trigger: controller?.stepTick)
+        .sensoryFeedback(.selection, trigger: controller?.expandedSetNumber)
         .errorAlert($errorMessage)
     }
 

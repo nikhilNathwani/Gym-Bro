@@ -46,6 +46,27 @@ final class ExerciseLogController {
     var notesDraft = ""
     var isCuesExpanded = true
 
+    // Only one set shows its stepper controls at a time — completed sets
+    // collapse to a compact read-only row (see `ExerciseLoggingSections`),
+    // since in practice past sets are rarely revisited once logged. `nil`
+    // means "no explicit choice yet," which defers to the last set — so a
+    // fresh set added via `addSet()` becomes the active one automatically
+    // just by resetting this to `nil` again, without needing to know its
+    // number in advance.
+    var expandedSetNumber: Int?
+
+    var effectiveExpandedSetNumber: Int? {
+        expandedSetNumber ?? sets.last?.setNumber
+    }
+
+    // Bumped on every stepper tap so a view can attach
+    // `.sensoryFeedback(_:trigger:)` to it — a plain `Stepper` fires this
+    // haptic itself on a real device, but that's implicit system behavior
+    // this project has no direct control over, so this gives an explicit,
+    // guaranteed-correct trigger to pair it with instead of relying on it
+    // alone.
+    var stepTick = 0
+
     private var todayLogId: UUID?
     private var lastCommittedNotes: String?
 
@@ -155,6 +176,7 @@ final class ExerciseLogController {
         let newValue = max(0, sets[index].weight + delta)
         sets[index].weight = newValue
         sets[index].weightText = formatNumber(newValue)
+        stepTick += 1
         commitSet(at: index)
     }
 
@@ -162,6 +184,7 @@ final class ExerciseLogController {
         let newValue = max(0, sets[index].reps + delta)
         sets[index].reps = newValue
         sets[index].repsText = String(newValue)
+        stepTick += 1
         commitSet(at: index)
     }
 
@@ -238,6 +261,7 @@ final class ExerciseLogController {
                     EditableSet(
                         id: newId, setNumber: setNumber, weight: weight, reps: reps,
                         weightText: formatNumber(weight), repsText: String(reps), persisted: true))
+                expandedSetNumber = nil
             } catch {
                 onError(error.localizedDescription)
             }

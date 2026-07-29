@@ -186,12 +186,49 @@ final class GymLogSmokeTests: XCTestCase {
 
         tapId("addSetButton")
         sleep(1)
+        let set1Row = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "set-1-row"))
+            .firstMatch
         let set2Row = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier == %@", "set-2-row"))
             .firstMatch
         XCTAssertTrue(set2Row.waitForExistence(timeout: 5), "Add set should create a second row")
+
+        // 3a-collapse. Only one set shows its stepper at a time — adding a
+        // new set should collapse the previous one (no more `weight-1-*`
+        // controls visible) and make the new set the active, steppered one.
+        let weight1Stepper = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "weight-1-stepper"))
+            .firstMatch
+        let weight2Stepper = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "weight-2-stepper"))
+            .firstMatch
+        XCTAssertFalse(weight1Stepper.exists, "Completed Set 1 should collapse to a read-only row")
+        XCTAssertTrue(weight2Stepper.waitForExistence(timeout: 5), "New Set 2 should be the active, steppered row")
+        screenshot("03a-set2-active-set1-collapsed")
+
+        // 3a-tap-to-edit. Tapping a collapsed set's row (not a swipe — see
+        // `ExerciseLoggingSections.collapsedSetRow`) re-expands its
+        // steppers and collapses whichever set was previously active. Same
+        // tap-to-expand convention as the "Cues" header lower on this
+        // screen, not a new one-off gesture.
+        //
+        // `set1Row` is the invisible full-size background marker (see the
+        // comment where it's built), not the row's real frontmost content —
+        // `.tap()` on it fails XCUITest's "isHittable" check for that
+        // reason (same non-issue `.swipeLeft()` below sidesteps by being a
+        // coordinate-based gesture, not a hittability-checked one), so this
+        // taps its center coordinate directly instead.
+        set1Row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(weight1Stepper.waitForExistence(timeout: 5), "Tapping Set 1's row should re-expand its steppers")
+        XCTAssertFalse(weight2Stepper.exists, "Only one set should be expanded at a time")
+        screenshot("03a-set1-reexpanded-via-tap")
+
         // Real `.swipeActions`, not a persistent trash icon — swipe the row
-        // to reveal the destructive "Delete" action, then tap it.
+        // to reveal the destructive "Delete" action, then tap it. Set 2 is
+        // collapsed at this point (Set 1 is the active one above), which
+        // also exercises that the swipe/delete affordance still works on a
+        // collapsed row, not just an active one.
         set2Row.swipeLeft()
         waitAndTap("Delete", exact: true)
         sleep(1)
@@ -300,5 +337,35 @@ final class GymLogSmokeTests: XCTestCase {
         waitAndTap("Create", exact: true)
         sleep(1)
         screenshot("13-exercise-created")
+
+        // 10. Cleanup — delete both disposable exercises this run created
+        // (the inline-logging one from step 3, and this one) via the
+        // library's real `.swipeActions` + confirmation dialog. Previously
+        // missing: a prior run's leftover "UITest Inline Logging" and
+        // "UITest Cable Curl" rows piled up across repeated runs (five
+        // stale copies found and manually purged from Supabase while
+        // debugging this), and two same-named exercises sitting in the
+        // same routine at once broke the Prev/Next assertions above
+        // (`exists` no longer distinguishes "moved away" from "landed on
+        // the other copy"). Deleting an exercise cascades to its
+        // exercise_logs/set_logs/routine_exercises rows, so this is enough
+        // to fully undo everything this test created.
+        // Substring match, not exact — step 4 above renamed the first
+        // exercise mid-string (typed " (edited)" wherever the cursor
+        // landed after `.tap()`, not necessarily at the end), so its
+        // persisted name is no longer the literal `exerciseName` value.
+        func deleteExercise(matching substring: String) {
+            let row = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "label CONTAINS[c] %@", substring))
+                .firstMatch
+            guard row.waitForExistence(timeout: 5) else { return }
+            row.swipeLeft()
+            waitAndTap("Delete", exact: true)
+            waitAndTap("Delete", exact: true) // confirmationDialog's own button
+            sleep(1)
+        }
+        deleteExercise(matching: "UITest Cable Curl")
+        deleteExercise(matching: "UITest Inline")
+        screenshot("14-cleanup-complete")
     }
 }
