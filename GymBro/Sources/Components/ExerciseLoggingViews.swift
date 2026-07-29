@@ -114,7 +114,7 @@ struct ExerciseLoggingDock: View {
     // stops growing as sets are added, so every card (including the
     // trailing "Add set" tile) must agree on one size regardless of content.
     private let cardWidth: CGFloat = 168
-    private let cardHeight: CGFloat = 200
+    private let cardHeight: CGFloat = 188
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -158,29 +158,40 @@ struct ExerciseLoggingDock: View {
     // side in a row. Adding a set scrolls the new (rightmost) card to the
     // center automatically; earlier sets are still reachable by scrolling
     // left.
+    //
+    // The row is center-aligned within the available width (via the
+    // `.frame(minWidth:)` below) rather than pinned to the leading edge —
+    // with just one set, that set sits dead center where you'd naturally
+    // keep tapping, and adding a second set keeps that first card exactly
+    // where it was instead of the whole row jumping left to make room.
+    // Once there are enough cards to overflow the available width, this has
+    // no visible effect and the row behaves like a normal scrolling list.
     private var setsCarousel: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    // Keyed by setNumber, not Identifiable's UUID — a set's
-                    // id changes from a local placeholder to the real
-                    // database id the moment it's first persisted (see
-                    // ExerciseLogController), and setNumber is the stable
-                    // identity used everywhere else in this file for
-                    // exactly that reason.
-                    ForEach(controller.sets, id: \.setNumber) { set in
-                        setCard(set)
-                            .id(set.setNumber)
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        // Keyed by setNumber, not Identifiable's UUID — a
+                        // set's id changes from a local placeholder to the
+                        // real database id the moment it's first persisted
+                        // (see ExerciseLogController), and setNumber is the
+                        // stable identity used everywhere else in this file
+                        // for exactly that reason.
+                        ForEach(controller.sets, id: \.setNumber) { set in
+                            setCard(set)
+                                .id(set.setNumber)
+                        }
+                        addSetCard
                     }
-                    addSetCard
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 2)
+                    .frame(minWidth: geometry.size.width, alignment: .center)
                 }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 2)
-            }
-            .onChange(of: controller.sets.count) { _, _ in
-                guard let lastSetNumber = controller.sets.last?.setNumber else { return }
-                withAnimation(.snappy(duration: 0.3)) {
-                    proxy.scrollTo(lastSetNumber, anchor: .center)
+                .onChange(of: controller.sets.count) { _, _ in
+                    guard let lastSetNumber = controller.sets.last?.setNumber else { return }
+                    withAnimation(.snappy(duration: 0.3)) {
+                        proxy.scrollTo(lastSetNumber, anchor: .center)
+                    }
                 }
             }
         }
@@ -197,9 +208,14 @@ struct ExerciseLoggingDock: View {
     private func setCard(_ set: ExerciseLogController.EditableSet) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                // Toned down to match the WEIGHT/REPS caption style below it
+                // (tiny, secondary, bold) — at the subheadline/primary size
+                // it was previously set at, this read as louder than
+                // anything else in the control, out of step with a label
+                // that's really just a corner tag, not a heading.
                 Text("SET \(set.setNumber)")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
                 Spacer()
                 // Only the last set can be removed (undoing an accidental
                 // "Add set") — deleting an arbitrary middle set would need
@@ -218,6 +234,7 @@ struct ExerciseLoggingDock: View {
             }
 
             numericStepper(
+                label: "WEIGHT",
                 text: Binding(
                     get: { controller.setIndex(for: set.id).map { controller.sets[$0].weightText } ?? set.weightText },
                     set: { newValue in
@@ -231,6 +248,7 @@ struct ExerciseLoggingDock: View {
                 onIncrement: { if let i = controller.setIndex(for: set.id) { controller.adjustWeight(at: i, by: 2.5) } }
             )
             numericStepper(
+                label: "REPS",
                 text: Binding(
                     get: { controller.setIndex(for: set.id).map { controller.sets[$0].repsText } ?? set.repsText },
                     set: { newValue in
@@ -255,16 +273,8 @@ struct ExerciseLoggingDock: View {
     // set's UUID (which only exists once persisted) — lets UI tests target
     // "the first set's weight stepper" predictably regardless of
     // persistence state.
-    // No "WEIGHT"/"REPS" text label on this control — three different ways
-    // of adding one (a wrapping VStack sibling, an overlay with extra top
-    // padding, a size-neutral offset overlay) all reproduced the exact same
-    // bug: a second rapid tap on the +/- buttons would silently fail to
-    // persist (see HANDOFF.md for the full repro). Root cause wasn't
-    // pinned down — it wasn't specific to any one structural pattern, just
-    // to the presence of any extra view here — so labels were dropped
-    // rather than shipped broken. Weight/reps are still distinguishable by
-    // position (weight always first) and format (decimal vs. integer).
     private func numericStepper(
+        label: String,
         text: Binding<String>,
         keyboardType: UIKeyboardType,
         focusField: FocusField,
@@ -272,22 +282,28 @@ struct ExerciseLoggingDock: View {
         onDecrement: @escaping () -> Void,
         onIncrement: @escaping () -> Void
     ) -> some View {
-        HStack(spacing: 2) {
-            RepeatingStepperButton(systemImage: "minus", identifier: "\(idPrefix)-minus", action: onDecrement)
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
 
-            TextField("", text: text)
-                .keyboardType(keyboardType)
-                .multilineTextAlignment(.center)
-                .font(.subheadline.weight(.bold))
-                .monospacedDigit()
-                .focused($focusedField, equals: focusField)
-                .frame(maxWidth: .infinity)
-                .accessibilityIdentifier("\(idPrefix)-field")
+            HStack(spacing: 2) {
+                RepeatingStepperButton(systemImage: "minus", identifier: "\(idPrefix)-minus", action: onDecrement)
 
-            RepeatingStepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
+                TextField("", text: text)
+                    .keyboardType(keyboardType)
+                    .multilineTextAlignment(.center)
+                    .font(.subheadline.weight(.bold))
+                    .monospacedDigit()
+                    .focused($focusedField, equals: focusField)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("\(idPrefix)-field")
+
+                RepeatingStepperButton(systemImage: "plus", identifier: "\(idPrefix)-plus", action: onIncrement)
+            }
+            .padding(3)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
         }
-        .padding(3)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var addSetCard: some View {
