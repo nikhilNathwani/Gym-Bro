@@ -144,7 +144,17 @@ struct WorkoutSessionView: View {
                         .font(.title.bold())
                     ExerciseSummarySection(controller: controller)
                 }
-                .padding(.vertical, 4)
+                // Zero horizontal row insets (below) put this content flush
+                // with the page's left margin, matching a plain page title
+                // rather than an indented card — but `.insetGrouped` still
+                // clips each section's first/last row to a rounded-corner
+                // mask regardless of the (clear) row background, and this
+                // is a single-row section, so both corners are rounded on
+                // both edges. 4pt of vertical padding sat inside that
+                // corner radius and clipped the corner off whatever glyph
+                // (e.g. "25×10"'s "2") landed there; this needs to clear
+                // the radius, not just add a little breathing room.
+                .padding(.vertical, 14)
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
@@ -153,7 +163,9 @@ struct WorkoutSessionView: View {
 
             Section {
                 ExerciseCuesSection(controller: controller)
-                    .padding(.vertical, 4)
+                    // Same rounded-corner-clip reasoning as above — this is
+                    // also a single-row section with zero horizontal insets.
+                    .padding(.vertical, 14)
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
