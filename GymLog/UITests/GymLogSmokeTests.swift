@@ -155,13 +155,17 @@ final class GymLogSmokeTests: XCTestCase {
         tapId("weight-1-field")
         sleep(1)
 
-        // Regression check: the field used to have a fixed width just wide
-        // enough for "0"/"50", so a longer decimal value like "37.5"
-        // silently truncated to "3..." on screen. The accessibility
-        // `.value` string would still report "37.5" even while visually
-        // clipped, so that's not a meaningful check here — instead confirm
-        // the field's actual on-screen frame grows to fit the longer text
-        // rather than staying fixed.
+        // Regression check: the field's width is fixed (not sized to its
+        // current content — a `.fixedSize()` field was tried and reverted,
+        // since it resized on every keystroke/increment and shifted the
+        // stepper's +/- buttons out from under a finger mid rapid-tap), so
+        // it needs to already be wide enough for a longer decimal value
+        // like "37.5" up front, or that value silently truncates to "3..."
+        // on screen. The accessibility `.value` string would still report
+        // "37.5" even while visually clipped, so that's not a meaningful
+        // check — instead confirm the frame stays the *same* width across
+        // a short and a long value (proving the stepper buttons don't
+        // move) and that width is generously wide.
         let weightField = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier == %@", "weight-1-field"))
             .firstMatch
@@ -175,9 +179,12 @@ final class GymLogSmokeTests: XCTestCase {
         weightField.typeText("37.5")
         sleep(1)
         screenshot("03a-weight-value-not-truncated")
+        XCTAssertEqual(
+            weightField.frame.width, widthWithShortValue, accuracy: 0.5,
+            "Weight field's width shouldn't change with its content — that's what shifts the stepper buttons mid-tap")
         XCTAssertGreaterThan(
-            weightField.frame.width, widthWithShortValue,
-            "Weight field should grow to fit a longer value instead of clipping it")
+            weightField.frame.width, 45,
+            "Weight field should be wide enough to show a value like \"37.5\" without truncating")
         clearWeightField()
         weightField.typeText("5")
 

@@ -271,13 +271,17 @@ struct ExerciseLoggingSections: View {
                     .keyboardType(keyboardType)
                     .font(.body.weight(.semibold))
                     .monospacedDigit()
+                    .multilineTextAlignment(.trailing)
                     .focused(focusedField, equals: focusCase)
-                    // A fixed `.frame(width: 34)` (enough for "0"/"50")
-                    // truncated anything longer, like a decimal weight
-                    // ("37.5" clipped to "3..."). `.fixedSize()` sizes the
-                    // field to exactly fit its current text instead, so it
-                    // never truncates regardless of how many digits.
-                    .fixedSize()
+                    // Fixed width, generous enough for a value like
+                    // "137.5" without ever needing to grow — a `.fixedSize()`
+                    // field (tried first, to fix truncation on longer
+                    // values) resized on every keystroke/increment, which
+                    // shifted the stepper's +/- buttons out from under a
+                    // finger mid rapid-tap. Right-aligned so the digits
+                    // still sit right up against the stepper regardless of
+                    // how many characters are showing.
+                    .frame(width: 54, alignment: .trailing)
                     .accessibilityIdentifier("\(idPrefix)-field")
                 Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
                     .labelsHidden()
