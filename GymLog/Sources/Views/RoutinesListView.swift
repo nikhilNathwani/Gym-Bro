@@ -27,43 +27,49 @@ struct RoutinesListView: View {
                         "No Routines", systemImage: "list.bullet.clipboard",
                         description: Text("Tap + to create one."))
                 } else {
-                    List {
-                        ForEach(Array(routines.enumerated()), id: \.element.id) { index, routine in
-                            NavigationLink(value: AppRoute.routine(routine.id)) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "list.bullet.clipboard")
-                                        .font(.subheadline)
-                                        .foregroundStyle(Color.accentColor)
-                                        .frame(width: 20, height: 20)
-                                    Text(displayName(for: routine, index: index))
-                                        .font(.headline)
-                                        .lineLimit(1)
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 16)], spacing: 16) {
+                            ForEach(Array(routines.enumerated()), id: \.element.id) { index, routine in
+                                NavigationLink(value: AppRoute.routine(routine.id)) {
+                                    RoutineCard(title: displayName(for: routine, index: index))
+                                }
+                                .buttonStyle(.plain)
+                                // Long-press replaces the old swipe actions — a
+                                // grid of cards has no natural "swipe" edge the
+                                // way list rows do.
+                                .contextMenu {
+                                    Button {
+                                        renameDraft = displayName(for: routine, index: index)
+                                        renameTarget = routine
+                                    } label: {
+                                        Label("Rename", systemImage: "pencil")
+                                    }
+                                    Button(role: .destructive) {
+                                        pendingDeleteRoutine = routine
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                // Drag-to-reorder replaces the old EditButton +
+                                // onMove — there's no list edit mode in a grid,
+                                // so cards reorder the same way home-screen
+                                // icons do: drag one onto another's spot.
+                                .draggable(routine.id.uuidString)
+                                .dropDestination(for: String.self) { items, _ in
+                                    guard let uuidString = items.first,
+                                          let sourceId = UUID(uuidString: uuidString),
+                                          let sourceIndex = routines.firstIndex(where: { $0.id == sourceId }),
+                                          let destIndex = routines.firstIndex(where: { $0.id == routine.id }),
+                                          sourceIndex != destIndex
+                                    else { return false }
+                                    Task { await moveRoutines(sourceIndex: sourceIndex, destIndex: destIndex) }
+                                    return true
                                 }
                             }
-                            // This same panel is what appears when tapping
-                            // the edit-mode "-" too (SwiftUI ties the two
-                            // together — there's no way to give "-" a
-                            // different, simpler reveal).
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    pendingDeleteRoutine = routine
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                Button {
-                                    renameDraft = displayName(for: routine, index: index)
-                                    renameTarget = routine
-                                } label: {
-                                    Label("Rename", systemImage: "pencil")
-                                }
-                                .tint(.accentColor)
-                            }
                         }
-                        .onMove { source, destination in
-                            Task { await moveRoutines(from: source, to: destination) }
-                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
                     }
-                    .contentMargins(.top, 20, for: .scrollContent)
                 }
             }
             .navigationTitle("")
@@ -87,7 +93,6 @@ struct RoutinesListView: View {
                         }
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) { EditButton() }
             }
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
@@ -173,9 +178,10 @@ struct RoutinesListView: View {
         }
     }
 
-    private func moveRoutines(from source: IndexSet, to destination: Int) async {
+    private func moveRoutines(sourceIndex: Int, destIndex: Int) async {
         var reordered = routines
-        reordered.move(fromOffsets: source, toOffset: destination)
+        let moved = reordered.remove(at: sourceIndex)
+        reordered.insert(moved, at: destIndex)
         do {
             try await SupabaseService.shared.reorderRoutines(orderedIds: reordered.map { $0.id })
             routines = try await SupabaseService.shared.fetchRoutines()
@@ -203,5 +209,32 @@ struct RoutinesListView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+}
+
+/// A routine's grid tile: a big, thumb-friendly tap target (vs. the old
+/// narrow list row) sized after Reminders'/Notes' folder-grid cards.
+private struct RoutineCard: View {
+    let title: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Image(systemName: "list.bullet.clipboard.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 40, height: 40)
+                .background(Color.accentColor.opacity(0.15), in: Circle())
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .contentShape(RoundedRectangle(cornerRadius: 18))
     }
 }
