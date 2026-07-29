@@ -154,6 +154,33 @@ final class GymLogSmokeTests: XCTestCase {
         // controls might exist elsewhere on screen).
         tapId("weight-1-field")
         sleep(1)
+
+        // Regression check: the field used to have a fixed width just wide
+        // enough for "0"/"50", so a longer decimal value like "37.5"
+        // silently truncated to "3..." on screen. The accessibility
+        // `.value` string would still report "37.5" even while visually
+        // clipped, so that's not a meaningful check here — instead confirm
+        // the field's actual on-screen frame grows to fit the longer text
+        // rather than staying fixed.
+        let weightField = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", "weight-1-field"))
+            .firstMatch
+        func clearWeightField() {
+            if let currentValue = weightField.value as? String, !currentValue.isEmpty {
+                weightField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count))
+            }
+        }
+        let widthWithShortValue = weightField.frame.width
+        clearWeightField()
+        weightField.typeText("37.5")
+        sleep(1)
+        screenshot("03a-weight-value-not-truncated")
+        XCTAssertGreaterThan(
+            weightField.frame.width, widthWithShortValue,
+            "Weight field should grow to fit a longer value instead of clipping it")
+        clearWeightField()
+        weightField.typeText("5")
+
         screenshot("03a-pre-keyboard-open")
         let keyboardDone = app.toolbars.buttons["Done"]
         XCTAssertTrue(keyboardDone.waitForExistence(timeout: 5), "Missing keyboard accessory Done button")

@@ -272,7 +272,12 @@ struct ExerciseLoggingSections: View {
                     .font(.body.weight(.semibold))
                     .monospacedDigit()
                     .focused(focusedField, equals: focusCase)
-                    .frame(width: 34)
+                    // A fixed `.frame(width: 34)` (enough for "0"/"50")
+                    // truncated anything longer, like a decimal weight
+                    // ("37.5" clipped to "3..."). `.fixedSize()` sizes the
+                    // field to exactly fit its current text instead, so it
+                    // never truncates regardless of how many digits.
+                    .fixedSize()
                     .accessibilityIdentifier("\(idPrefix)-field")
                 Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
                     .labelsHidden()
