@@ -53,11 +53,12 @@ struct ExerciseLibraryView: View {
                 }
             }
         }
-        // No nav bar title, matching the Routines tab's own root screen —
-        // same leading avatar button on both tab roots instead of one
-        // having a title and the other an account affordance.
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
+        // Same real large title treatment as the Routines tab's own root
+        // screen (Apple Notes-style — see its doc comment) — both tab
+        // roots now match: a big bold heading plus the same leading avatar
+        // button, instead of one tab having a title and the other not.
+        .navigationTitle("Exercises")
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
         }

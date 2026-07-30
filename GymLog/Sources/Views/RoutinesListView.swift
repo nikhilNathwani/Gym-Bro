@@ -75,8 +75,14 @@ struct RoutinesListView: View {
                     .refreshable { await load() }
                 }
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
+            // A real large title ("Routines"), Apple Notes-style (its main
+            // list shows "All iCloud" the same way) — previously no title
+            // at all, just the avatar button, which read as unfinished/
+            // nameless compared to Notes' own big bold heading. The avatar
+            // still sits in the slim bar above it; a large title and a
+            // leading toolbar item don't compete for space, they stack.
+            .navigationTitle("Routines")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
                 if !routines.isEmpty {
