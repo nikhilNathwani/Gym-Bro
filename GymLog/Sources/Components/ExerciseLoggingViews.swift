@@ -1,13 +1,20 @@
 import SwiftUI
 import UIKit
 
-/// The whole exercise page's content — name, target, last time, today's
-/// log, notes, cues, history — as one `List`. Shared by both places an
+/// The whole exercise page's content — name, target, today's log, notes,
+/// last time, cues, history — as one `List`. Shared by both places an
 /// exercise is shown: `WorkoutSessionView` wraps this with a Prev/Next
 /// toolbar for its routine context; `ExerciseDetailView` hosts it standalone
 /// (no paging). Keeping this in one place is the whole point of the merge
 /// these two used to be separate, overlapping pages before it — one set of
 /// editable fields, not two copies that can drift out of sync.
+///
+/// "Last Time" sits *below* "Today's Log" — it used to be pinned above so
+/// it was always visible without scrolling, back when Today's Log started
+/// pre-filled and could run long; now every exercise starts at zero sets
+/// (an explicit "Add Set" tap is required — see `ExerciseLogController`'s
+/// type doc comment), so Today's Log is short enough by default that
+/// there's nothing left to scroll past.
 struct ExercisePageList: View {
     let controller: ExerciseLogController
     var focusedField: FocusState<LoggingFocusField?>.Binding
@@ -39,6 +46,8 @@ struct ExercisePageList: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets())
 
+            ExerciseLoggingSections(controller: controller, focusedField: focusedField)
+
             // A log can legitimately have zero sets (see `seed()`'s doc
             // comment on `ExerciseLogController` — deleting the last set
             // leaves a real, childless row behind rather than deleting the
@@ -48,7 +57,6 @@ struct ExercisePageList: View {
             if let lastTime = controller.lastTime, !lastTime.setLogs.isEmpty {
                 ExerciseLastTimeSection(log: lastTime)
             }
-            ExerciseLoggingSections(controller: controller, focusedField: focusedField)
             ExerciseCuesSection(controller: controller, focusedField: focusedField)
             ExerciseHistorySection(controller: controller)
         }
@@ -60,8 +68,9 @@ struct ExercisePageList: View {
 /// Just the target field — shown *above* the logging controls, directly
 /// under the name. A peek at last time's numbers used to live here too, as
 /// hand-styled text; it's now its own real `Section` (`ExerciseLastTimeSection`,
-/// below) so its header matches every other section's ("Cues", "Today's
-/// Log", ...) instead of being a one-off bolded label.
+/// further down the page — see `ExercisePageList`'s doc comment for why)
+/// so its header matches every other section's ("Cues", "Today's Log", ...)
+/// instead of being a one-off bolded label.
 struct ExerciseSummarySection: View {
     let controller: ExerciseLogController
     var focusedField: FocusState<LoggingFocusField?>.Binding
@@ -283,7 +292,7 @@ struct ExerciseLoggingSections: View {
     }
 
     /// The active set: full weight/reps steppers, editable. No "last
-    /// time" peek here — the "Last Time" summary at the top of the page
+    /// time" peek here — the "Last Time" section elsewhere on the page
     /// already shows that, and repeating it per-row was clutter, not
     /// useful reference: you'd have to scroll away from it to compare
     /// against a value you're actively adjusting anyway.
