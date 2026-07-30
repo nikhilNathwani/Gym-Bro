@@ -47,9 +47,6 @@ struct RoutinesListView: View {
                             NavigationLink(value: AppRoute.routine(routine.id)) {
                                 RoutineCard(title: displayName(for: routine, index: index))
                             }
-                            .listRowInsets(EdgeInsets(top: 7, leading: 20, bottom: 7, trailing: 20))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
                             // `allowsFullSwipe: false` — same reasoning as
                             // `ExerciseLibraryView`/`HistoryEntryView`'s own
                             // swipe actions: a full swipe would otherwise
@@ -226,22 +223,30 @@ struct RoutinesListView: View {
     }
 }
 
-/// A routine's tap target: a wide row spanning the full screen width, taller
-/// than a plain list row — big and thumb-friendly (like the grid tile this
-/// replaced) but reachable without moving a finger all the way to one
-/// corner, since the whole row's width is live, not just a square in a
-/// column. No manual trailing chevron — this is now a real `List` row with
-/// a `NavigationLink` as its primary content, so the system draws its own
-/// disclosure indicator; one drawn here too would double up.
+/// A routine row's content — icon + title, with generous vertical padding
+/// for a taller, easier tap target than a default list row (still spanning
+/// the full row width, so it's reachable from wherever a thumb rests, not
+/// just a square in a grid column).
+///
+/// Used to be its own rounded, tinted card with a gap above/below and no
+/// divider — a carryover from when these were square grid tiles with no
+/// native list behavior at all. Once this became a real `List` (swipe
+/// actions, `EditButton` reorder, a system chevron), that tinted-card look
+/// increasingly fought what the row actually was: a plain list row. Now it
+/// sits on the list's own background with a standard divider beneath it,
+/// same as every other list already in the app (Exercise Library, Routine
+/// Detail's exercise list, History) — no manual trailing chevron either,
+/// since a `List` row with a `NavigationLink` as its primary content draws
+/// its own disclosure indicator; one drawn here too would double up.
 private struct RoutineCard: View {
     let title: String
 
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: "list.bullet.clipboard.fill")
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Color.accentColor)
-                .frame(width: 48, height: 48)
+                .frame(width: 40, height: 40)
                 .background(Color.accentColor.opacity(0.15), in: Circle())
             Text(title)
                 .font(.title3.weight(.semibold))
@@ -250,10 +255,6 @@ private struct RoutineCard: View {
                 .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 20)
-        .frame(maxWidth: .infinity, minHeight: 88)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-        .contentShape(RoundedRectangle(cornerRadius: 18))
+        .padding(.vertical, 16)
     }
 }
