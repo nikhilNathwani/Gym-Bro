@@ -72,6 +72,10 @@ struct RoutinesListView: View {
                         }
                     }
                     .listStyle(.plain)
+                    // Breathing room between the large title and the first
+                    // row — `.plain` otherwise butts content right up
+                    // against it with no gap at all.
+                    .contentMargins(.top, 24, for: .scrollContent)
                     .refreshable { await load() }
                 }
             }

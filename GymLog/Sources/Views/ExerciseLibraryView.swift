@@ -54,6 +54,10 @@ struct ExerciseLibraryView: View {
                         }
                     }
                 }
+                // Breathing room between the large title and the first
+                // row — the list otherwise butts content right up against
+                // it with no gap at all.
+                .contentMargins(.top, 24, for: .scrollContent)
             }
         }
         // Large title, same Apple Notes-style treatment as Routines — but
