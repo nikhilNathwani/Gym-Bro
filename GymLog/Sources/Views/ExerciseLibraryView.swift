@@ -54,10 +54,20 @@ struct ExerciseLibraryView: View {
                         }
                     }
                 }
-                // Breathing room between the large title and the first
-                // row — the list otherwise butts content right up against
-                // it with no gap at all.
-                .contentMargins(.top, 24, for: .scrollContent)
+                // `.plain` — matching Routines' edge-to-edge, divider-
+                // separated look. Left unset before, this list defaulted to
+                // an inset-grouped rounded card floating on a gray
+                // background, a different native list style from its
+                // sibling top-level list for no real reason (unlike
+                // RoutineDetailView, which has a deliberate reason to stay
+                // grouped: its accent-colored "Start/Continue Workout"
+                // button relies on the grouped style's rounded corners to
+                // read as a button at all).
+                .listStyle(.plain)
+                // Small breathing room between the large title and the
+                // first row — `.plain` otherwise butts content right up
+                // against it with almost no gap.
+                .contentMargins(.top, 8, for: .scrollContent)
             }
         }
         // Large title, same Apple Notes-style treatment as Routines — but

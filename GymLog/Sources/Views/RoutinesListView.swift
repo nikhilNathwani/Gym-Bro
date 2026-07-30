@@ -72,10 +72,17 @@ struct RoutinesListView: View {
                         }
                     }
                     .listStyle(.plain)
-                    // Breathing room between the large title and the first
-                    // row — `.plain` otherwise butts content right up
-                    // against it with no gap at all.
-                    .contentMargins(.top, 24, for: .scrollContent)
+                    // Small breathing room between the large title and the
+                    // first row — `.plain` otherwise butts content right up
+                    // against it with almost no gap. Kept deliberately
+                    // modest: the space *above* the title (between it and
+                    // the compact toolbar row) is the system's own large-
+                    // title spacing, not adjustable via public API without
+                    // replacing the native title entirely — so a small
+                    // value here keeps the title reading like it belongs
+                    // with what's above it, rather than overcorrecting
+                    // with a big gap below that then needs shrinking back.
+                    .contentMargins(.top, 8, for: .scrollContent)
                     .refreshable { await load() }
                 }
             }
