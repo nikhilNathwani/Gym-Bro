@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// Port of exercises/page.tsx + ExerciseLibraryList.tsx.
+/// Port of exercises/page.tsx + ExerciseLibraryList.tsx. Pushed from
+/// `RoutinesListView`'s toolbar icon (its own `NavigationStack` hosts this,
+/// same routes as everywhere else in the app) — not a tab root anymore, so
+/// it gets a plain system back chevron instead of an account avatar button.
 struct ExerciseLibraryView: View {
     @Binding var createTrigger: Bool
 
@@ -53,15 +56,11 @@ struct ExerciseLibraryView: View {
                 }
             }
         }
-        // Same real large title treatment as the Routines tab's own root
-        // screen (Apple Notes-style — see its doc comment) — both tab
-        // roots now match: a big bold heading plus the same leading avatar
-        // button, instead of one tab having a title and the other not.
+        // Large title, same Apple Notes-style treatment as Routines — but
+        // no avatar button here; the back chevron (automatic for a pushed
+        // screen) already occupies the leading slot.
         .navigationTitle("Exercises")
         .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
-        }
         .sheet(isPresented: $showNewExercise) {
             NewExerciseView(onCreated: { _ in Task { await load() } })
         }

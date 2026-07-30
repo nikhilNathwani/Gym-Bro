@@ -1,13 +1,16 @@
 import SwiftUI
 
-/// Port of page.tsx (home / "/"). Root of the Routines tab's own
-/// NavigationStack.
+/// Port of page.tsx (home / "/"). The app's single root screen — also owns
+/// the one shared `NavigationStack` (see `RootView`), including the push
+/// into `ExerciseLibraryView` via the toolbar icon below, so its
+/// `navigationDestination` declarations cover every route in the app.
 struct RoutinesListView: View {
     @Binding var createTrigger: Bool
+    @Binding var createExerciseTrigger: Bool
     @Binding var addExerciseTrigger: Bool
     @Binding var isRoutineDetailActive: Bool
+    @Binding var isExerciseLibraryActive: Bool
     @Binding var isWorkoutSessionActive: Bool
-    @Binding var popToRootTrigger: Bool
 
     @State private var path = NavigationPath()
     @State private var routines: [Routine] = []
@@ -85,6 +88,14 @@ struct RoutinesListView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        path.append(AppRoute.exerciseLibrary)
+                    } label: {
+                        Image(systemName: "dumbbell")
+                    }
+                    .accessibilityLabel("Exercises")
+                }
                 if !routines.isEmpty {
                     ToolbarItem(placement: .navigationBarTrailing) { EditButton() }
                 }
@@ -103,6 +114,10 @@ struct RoutinesListView: View {
                             isWorkoutSessionActive = true
                         }
                         .onDisappear { isWorkoutSessionActive = false }
+                case .exerciseLibrary:
+                    ExerciseLibraryView(createTrigger: $createExerciseTrigger)
+                        .onAppear { isExerciseLibraryActive = true }
+                        .onDisappear { isExerciseLibraryActive = false }
                 }
             }
         }
@@ -113,7 +128,6 @@ struct RoutinesListView: View {
         .onChange(of: createTrigger) { _, _ in
             Task { await createRoutine() }
         }
-        .onChange(of: popToRootTrigger) { _, _ in path = NavigationPath() }
         .confirmationDialog(
             "Delete this routine? This cannot be undone.",
             isPresented: Binding(

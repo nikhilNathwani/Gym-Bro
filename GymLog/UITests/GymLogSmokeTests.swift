@@ -49,11 +49,9 @@ final class GymLogSmokeTests: XCTestCase {
             for _ in 0..<times { incrementButton.tap() }
         }
 
-        // RootTabView keeps both tabs' view hierarchies always mounted (to
-        // preserve each tab's own nav state across switches), so a hidden
-        // tab's fields still turn up in `app.textFields` queries even though
-        // they're `.accessibilityHidden` — a bare `.firstMatch` is
-        // ambiguous. Scope by placeholder instead.
+        // Scoped by placeholder rather than a bare `.firstMatch` — several
+        // screens share generic-looking text fields (e.g. a name field),
+        // so this stays unambiguous regardless of which one is on screen.
         func textField(placeholder: String, timeout: TimeInterval = 8) -> XCUIElement {
             let element = app.textFields
                 .matching(NSPredicate(format: "placeholderValue == %@", placeholder))
@@ -73,7 +71,7 @@ final class GymLogSmokeTests: XCTestCase {
             app.textFields.matching(NSPredicate(format: "value == %@", name)).firstMatch
         }
 
-        // 1. Routines tab (default) -> first routine. Routine names are now
+        // 1. The single root screen -> first routine. Routine names are now
         // real stored labels the user can freely rename (not a derived
         // "Routine A - Label" pairing) — match today's actual label rather
         // than a positional string. Update this if it's renamed again.
@@ -355,10 +353,11 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         screenshot("08-back-to-routines")
 
-        // 7. Tab-bar-inline "+" creates a routine (context-aware: Routines
-        // tab is active), then delete it via the Edit view's "Delete this
-        // routine" button (self-cleaning). Replaces the old "..." menu,
-        // which felt like overkill for a single destructive action.
+        // 7. The floating "+" creates a routine (context-aware: we're at
+        // the root screen, not inside a routine or the exercise library),
+        // then delete it via the Edit view's "Delete this routine" button
+        // (self-cleaning). Replaces the old "..." menu, which felt like
+        // overkill for a single destructive action.
         waitAndTap("Add", exact: true)
         sleep(1)
         screenshot("09-new-routine-created")
@@ -368,12 +367,17 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         screenshot("10-back-after-delete")
 
-        // 8. Exercises tab.
+        // 8. Exercise Library — reached via the root screen's toolbar
+        // dumbbell icon (Exercises used to be a second tab; now it's an
+        // occasional destination pushed from Routines, since real usage
+        // turned out to be almost entirely inside a routine). The icon's
+        // accessibility label is "Exercises", so this still reads the same.
         waitAndTap("Exercises", exact: true)
         sleep(1)
         screenshot("11-exercise-library")
 
-        // 9. Same tab-bar "+", now context-aware for creating an exercise.
+        // 9. Same floating "+", now context-aware for creating an exercise
+        // since the Exercise Library is what's on top of the stack.
         waitAndTap("Add", exact: true)
         screenshot("12-new-exercise-sheet")
         let newNameField = textField(placeholder: "Name")
