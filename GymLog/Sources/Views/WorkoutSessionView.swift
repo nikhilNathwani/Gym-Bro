@@ -118,6 +118,9 @@ struct WorkoutSessionView: View {
         .onChange(of: focusedField) { oldValue, _ in
             guard let oldValue, let controller else { return }
             switch oldValue {
+            case .name: controller.saveName()
+            case .target: controller.saveTarget()
+            case .cues: controller.saveCues()
             case .weight(let id): if let i = controller.setIndex(for: id) { controller.commitWeightText(at: i) }
             case .reps(let id): if let i = controller.setIndex(for: id) { controller.commitRepsText(at: i) }
             case .notes: controller.commitNotes()
@@ -138,41 +141,11 @@ struct WorkoutSessionView: View {
     // below Cues — the user said having to scroll past cues to reach the
     // actual inputs bothered them, and cues are something you'd check
     // before a set anyway, not something that needs to be pinned above the
-    // inputs. Cues + the full exercise page link move to the bottom
-    // instead.
+    // inputs. Cues (then History) sit at the bottom instead. Content itself
+    // lives in `ExercisePageList`, shared with the standalone
+    // `ExerciseDetailView` — this just adds the Prev/Next toolbar around it.
     private func page(_ controller: ExerciseLogController) -> some View {
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(exercises[currentIndex].name)
-                        .font(.title.bold())
-                    ExerciseSummarySection(controller: controller)
-                }
-                // Zero horizontal row insets (below) put this content flush
-                // with the page's left margin, matching a plain page title
-                // rather than an indented card — but `.insetGrouped` still
-                // clips each section's first/last row to a rounded-corner
-                // mask regardless of the (clear) row background, and this
-                // is a single-row section, so both corners are rounded on
-                // both edges. 4pt of vertical padding sat inside that
-                // corner radius and clipped the corner off whatever glyph
-                // (e.g. "25×10"'s "2") landed there; this needs to clear
-                // the radius, not just add a little breathing room.
-                .padding(.vertical, 14)
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-
-            ExerciseLoggingSections(controller: controller, focusedField: $focusedField)
-
-            // Owns its own `Section`(s)/row-insets/corner-clip padding
-            // internally (see its type doc comment) — it's two separate
-            // single-row `Section`s, not one, so it can't just be wrapped
-            // the same way the title section above is.
-            ExerciseCuesSection(controller: controller)
-        }
-        .listStyle(.insetGrouped)
-        .scrollDismissesKeyboard(.interactively)
+        ExercisePageList(controller: controller, focusedField: $focusedField)
     }
 
     private func goToPrevious() {
@@ -220,6 +193,7 @@ struct WorkoutSessionView: View {
         controller = ExerciseLogController(
             exercise: exercises[currentIndex],
             onLogged: { await reload() },
+            onExerciseUpdated: { await reload() },
             onError: { errorMessage = $0 }
         )
     }

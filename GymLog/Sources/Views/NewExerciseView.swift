@@ -29,7 +29,7 @@ struct NewExerciseView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") { Task { await create() } }
-                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                        .disabled(name.trimmed.isEmpty || isSaving)
                 }
             }
             .onAppear { isNameFocused = true }
@@ -38,7 +38,7 @@ struct NewExerciseView: View {
     }
 
     private func create() async {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = name.trimmed
         guard !trimmed.isEmpty else { return }
         isSaving = true
         defer { isSaving = false }

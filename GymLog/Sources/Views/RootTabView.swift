@@ -12,9 +12,11 @@ private enum RootTab: Hashable {
 /// routine, or an exercise on the Exercises tab).
 /// Deliberately not a system `TabView` — Todoist's bar isn't a full-width
 /// tab bar either, and mixing a create *action* into real navigation tabs
-/// doesn't read as a tab. The selected item gets a glass capsule behind it
-/// that slides between positions (`matchedGeometryEffect`), echoing the
-/// system tab bar's own selection-indicator look.
+/// doesn't read as a tab. The selected item gets a solid accent-colored
+/// capsule behind it that slides between positions
+/// (`matchedGeometryEffect`), echoing the system tab bar's own
+/// selection-indicator look (see `navButton`'s doc comment for why this
+/// is solid color, not glass/material).
 struct RootTabView: View {
     @State private var selectedTab: RootTab = .routines
     @State private var createRoutineTrigger = false
@@ -22,6 +24,13 @@ struct RootTabView: View {
     @State private var addExerciseTrigger = false
     @State private var isRoutineDetailActive = false
     @State private var isWorkoutSessionActive = false
+    @State private var popRoutinesTrigger = false
+    @State private var popExercisesTrigger = false
+    // A single counter driving `.sensoryFeedback` below, bumped on every
+    // pill tap — both a tab switch and a re-tap-to-pop-to-root (which
+    // doesn't change `selectedTab` at all, so that alone can't be the
+    // trigger) should get the same haptic.
+    @State private var navTapTick = 0
     @Namespace private var pillNamespace
 
     var body: some View {
@@ -30,17 +39,19 @@ struct RootTabView: View {
                 createTrigger: $createRoutineTrigger,
                 addExerciseTrigger: $addExerciseTrigger,
                 isRoutineDetailActive: $isRoutineDetailActive,
-                isWorkoutSessionActive: $isWorkoutSessionActive
+                isWorkoutSessionActive: $isWorkoutSessionActive,
+                popToRootTrigger: $popRoutinesTrigger
             )
                 .opacity(selectedTab == .routines ? 1 : 0)
                 .allowsHitTesting(selectedTab == .routines)
                 .accessibilityHidden(selectedTab != .routines)
 
-            ExercisesTabView(createTrigger: $createExerciseTrigger)
+            ExercisesTabView(createTrigger: $createExerciseTrigger, popToRootTrigger: $popExercisesTrigger)
                 .opacity(selectedTab == .exercises ? 1 : 0)
                 .allowsHitTesting(selectedTab == .exercises)
                 .accessibilityHidden(selectedTab != .exercises)
         }
+        .sensoryFeedback(.selection, trigger: navTapTick)
         // Todoist-style: the keyboard should float on top of the whole tab
         // shell, not push it up. This has to sit on the ZStack itself, not
         // just the pill/"+" overlay below — the overlay's position is
@@ -70,6 +81,13 @@ struct RootTabView: View {
         }
     }
 
+    // Tried real Liquid Glass here (`GlassEffectContainer` + `.glassEffect()`,
+    // iOS 26+) to match the bottom-bar Prev/Next buttons' native glass —
+    // reverted after two real problems surfaced: the selected label/icon
+    // read as illegible ("foggy/dark") against the tint, and it broke actual
+    // navigation — with it active, tapping WorkoutSessionView's back button
+    // stopped popping the stack at all (caught by `testGoldenPath`, isolated
+    // by bisection to this exact code). Back to a plain material capsule.
     private var pillNav: some View {
         HStack(spacing: 2) {
             navButton(tab: .routines, systemImage: "list.bullet.clipboard", label: "Routines")
@@ -83,7 +101,19 @@ struct RootTabView: View {
     private func navButton(tab: RootTab, systemImage: String, label: String) -> some View {
         let isSelected = selectedTab == tab
         return Button {
-            withAnimation(.snappy(duration: 0.25)) { selectedTab = tab }
+            navTapTick += 1
+            if selectedTab == tab {
+                // Re-tapping the already-active tab: same convention as the
+                // system tab bar (tap the current tab again to pop to root),
+                // not a no-op — previously this silently did nothing since
+                // `selectedTab` wasn't actually changing.
+                switch tab {
+                case .routines: popRoutinesTrigger.toggle()
+                case .exercises: popExercisesTrigger.toggle()
+                }
+            } else {
+                withAnimation(.snappy(duration: 0.25)) { selectedTab = tab }
+            }
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: systemImage)
@@ -92,12 +122,20 @@ struct RootTabView: View {
                 Text(label)
                     .font(.system(size: 12, weight: .semibold))
             }
-            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+            // A solid accent-colored capsule + white icon/label for the
+            // selected state, not accentColor text over a translucent
+            // material highlight (tried first) — the material blurred
+            // whatever sat behind it into a similar tone to the accent
+            // color itself, so the "selected" icon/label read as murky and
+            // low-contrast ("foggy") rather than clearly picked out. Solid
+            // color behind white content is unambiguous in both light and
+            // dark mode, same idea as Todoist's own selected pill state.
+            .foregroundStyle(isSelected ? Color.white : Color.secondary)
             .frame(width: 82, height: 58)
             .background {
                 if isSelected {
                     Capsule()
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.accentColor)
                         .matchedGeometryEffect(id: "pillHighlight", in: pillNamespace)
                 }
             }
@@ -141,6 +179,7 @@ struct RootTabView: View {
 /// Routines tab's stack.
 private struct ExercisesTabView: View {
     @Binding var createTrigger: Bool
+    @Binding var popToRootTrigger: Bool
 
     @State private var path = NavigationPath()
 
@@ -154,5 +193,6 @@ private struct ExercisesTabView: View {
                     }
                 }
         }
+        .onChange(of: popToRootTrigger) { _, _ in path = NavigationPath() }
     }
 }

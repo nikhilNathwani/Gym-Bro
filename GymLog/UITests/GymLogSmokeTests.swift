@@ -62,6 +62,17 @@ final class GymLogSmokeTests: XCTestCase {
             return element
         }
 
+        // The exercise title used to be a plain `Text` (an `app.staticTexts`
+        // match), but is now an always-editable `TextField` (name/target/cues
+        // are inline-editable directly on this page — see
+        // `ExerciseLogController`'s type doc comment), so "is this exercise's
+        // page showing" has to check a text field's *value*, not a static
+        // text's label — a `TextField`'s accessibility *label* is its
+        // placeholder ("Exercise name"), not its current text.
+        func exerciseTitleField(_ name: String) -> XCUIElement {
+            app.textFields.matching(NSPredicate(format: "value == %@", name)).firstMatch
+        }
+
         // 1. Routines tab (default) -> first routine. Routine names are now
         // real stored labels the user can freely rename (not a derived
         // "Routine A - Label" pairing) — match today's actual label rather
@@ -105,7 +116,7 @@ final class GymLogSmokeTests: XCTestCase {
         // list screen underneath can still expose a matching row's text to
         // element queries even while off-screen, which would otherwise let
         // this assertion pass without actually verifying what's visible.
-        let reachedTitle = app.staticTexts[exerciseName].firstMatch
+        let reachedTitle = exerciseTitleField(exerciseName)
         XCTAssertTrue(reachedTitle.waitForExistence(timeout: 5), "Tapping the row did not land on that exercise")
         XCTAssertTrue(reachedTitle.isHittable, "Matched exercise title isn't actually visible on screen")
         screenshot("02b-reached-new-exercise")
@@ -123,16 +134,16 @@ final class GymLogSmokeTests: XCTestCase {
         // which is always reachable anyway.)
         tapId("nextExerciseButton")
         sleep(1)
-        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Next should be a no-op on the last exercise")
+        XCTAssertTrue(exerciseTitleField(exerciseName).exists, "Next should be a no-op on the last exercise")
 
         tapId("previousExerciseButton")
         sleep(1)
-        XCTAssertFalse(app.staticTexts[exerciseName].exists, "Previous should move to the previous exercise")
+        XCTAssertFalse(exerciseTitleField(exerciseName).exists, "Previous should move to the previous exercise")
 
         tapId("nextExerciseButton")
         sleep(1)
         XCTAssertTrue(
-            app.staticTexts[exerciseName].waitForExistence(timeout: 5),
+            exerciseTitleField(exerciseName).waitForExistence(timeout: 5),
             "Next should return to the new exercise")
         screenshot("02c-after-paging")
 
@@ -238,8 +249,11 @@ final class GymLogSmokeTests: XCTestCase {
         // to reveal the destructive "Delete" action, then tap it. Set 2 is
         // collapsed at this point (Set 1 is the active one above), which
         // also exercises that the swipe/delete affordance still works on a
-        // collapsed row, not just an active one.
+        // collapsed row, not just an active one. The swipe action itself
+        // only opens a confirmation dialog now (all delete actions do), so
+        // a second "Delete" tap confirms it.
         set2Row.swipeLeft()
+        waitAndTap("Delete", exact: true)
         waitAndTap("Delete", exact: true)
         sleep(1)
         XCTAssertFalse(
@@ -250,75 +264,56 @@ final class GymLogSmokeTests: XCTestCase {
         screenshot("03b-set-added-then-deleted")
 
         // 3b. Regression check for the reported bug: tapping inert row
-        // content ("Set 1" here, not a control and not the "Open full
-        // exercise page" link) must NOT navigate away. This used to happen
-        // because InlineExerciseCard sat inside a List row that also
-        // contained a NavigationLink, and List makes the whole row
-        // tappable-through to any NavigationLink nested in it — the Sets
-        // section's rows here have no NavigationLink in them at all, so
-        // this is now structurally not possible, but the assertion stays
-        // as regression insurance.
+        // content ("Set 1" here, not a control) must NOT navigate away.
+        // This used to happen because InlineExerciseCard sat inside a List
+        // row that also contained a NavigationLink, and List makes the
+        // whole row tappable-through to any NavigationLink nested in it —
+        // the Sets section's rows here have no NavigationLink in them at
+        // all, so this is now structurally not possible, but the assertion
+        // stays as regression insurance.
         waitAndTap("Set 1", exact: true)
-        XCTAssertTrue(app.staticTexts[exerciseName].exists, "Tapping inert row content should not navigate away")
+        XCTAssertTrue(exerciseTitleField(exerciseName).exists, "Tapping inert row content should not navigate away")
 
-        // 4. Open the full exercise page from its explicit link only.
-        waitAndTap("Open full exercise page")
-        screenshot("04-exercise-detail")
-
+        // 4. Name/target/cues are editable directly on this same workout
+        // page now — there's no separate "full exercise page" to navigate
+        // to anymore (the two were merged into one; see
+        // `ExerciseLogController`'s type doc comment). No page-level "Edit
+        // mode" either: each field is just tap-and-type, committing on
+        // blur exactly like the Notes field already did.
         let nameField = textField(placeholder: "Exercise name")
         nameField.tap()
         nameField.typeText(" (edited)")
 
-        // Give this fresh exercise some cues text (it has none by
-        // default) so the tap-safety regression check below — back on
-        // the workout screen — has real inert content to tap, not just
-        // the empty "Open full exercise page" link on its own.
-        waitAndTap("Edit", exact: true) // page-level edit mode
-        waitAndTap("Edit", exact: true) // cues-specific edit mode (the only "Edit" left once the page-level one above relabels to "Done")
-        let cuesEditor = app.textViews.firstMatch
-        XCTAssertTrue(cuesEditor.waitForExistence(timeout: 5), "Missing cues text editor")
-        cuesEditor.tap()
-        cuesEditor.typeText("Test cue for tap-safety check")
-        nameField.tap() // moves focus off the cues editor, triggering its save-on-blur
-        sleep(1)
-        screenshot("04a-cues-added")
+        let targetField = textField(placeholder: "Target — e.g. 3 sets × 6–10 reps")
+        targetField.tap()
+        targetField.typeText("3 sets x 10 reps")
 
-        waitAndTap("History")
-        sleep(1)
-        screenshot("05-name-edited")
+        let cuesField = textField(placeholder: "Add cues — form notes, setup reminders, etc.")
+        cuesField.tap()
+        cuesField.typeText("Test cue for tap-safety check")
+        screenshot("04a-fields-edited")
 
-        // Back to the workout session (single pop within the same
-        // NavigationStack) — screen is pushed, not presented as a sheet,
-        // so the standard back chevron is the only exit affordance now
-        // (see WorkoutSessionView).
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        // Dismiss the keyboard via its own accessory "Done" first (reusing
+        // the query from step 3a-pre above — it's re-resolved at tap time,
+        // so it's still valid for whatever field is focused now).
+        XCTAssertTrue(keyboardDone.waitForExistence(timeout: 5), "Missing keyboard accessory Done button")
+        keyboardDone.tap()
         sleep(1)
 
-        // 4a. Regression check for a bug fixed this session: tapping the
-        // Cues section's inert content (its text here — not the "Open
-        // full exercise page" link) must NOT navigate away. This happened
-        // because `ExerciseCuesSection` put both the cues content and the
-        // link's `NavigationLink` in one shared List row/Section, and List
-        // makes the whole row/Section tappable-through to any
-        // `NavigationLink` nested in it (same class of bug, and this
-        // codebase's second run-in with it, as the "Set 1" check above) —
-        // splitting them into fully separate `Section`s (see that type's
-        // doc comment) fixed it structurally, but this assertion stays as
-        // regression insurance.
-        //
-        // Checks for the Prev/Next toolbar rather than `exerciseName`'s
-        // static text — the name was edited above (now
-        // "...Inline  (edited)Logging", not the literal `exerciseName`
-        // string), so a check against the original name would always fail
-        // here regardless of navigation and silently prove nothing.
-        waitAndTap("Test cue for tap-safety check", exact: true)
+        // Expands the new History section (a native `DisclosureGroup`) —
+        // previously an unwired "View history" placeholder link (only
+        // shown once there's a prior day to peek at, which this fresh
+        // exercise never has) pointing at the old separate page.
+        tapId("historyToggle")
+        sleep(1)
         XCTAssertTrue(
-            app.descendants(matching: .any)
-                .matching(NSPredicate(format: "identifier == %@", "nextExerciseButton"))
-                .firstMatch.exists,
-            "Tapping the cues text should not navigate away from the workout session")
+            app.staticTexts["No past sessions yet."].waitForExistence(timeout: 5),
+            "History should expand and show the empty state for a fresh exercise")
+        screenshot("04b-history-expanded")
 
-        // Now exit the session back to the routine's plain list.
+        // Exit the session back to the routine's plain list — a single
+        // pop, since editing name/target/cues above never left this
+        // screen at all (no separate page to pop back through anymore).
         app.navigationBars.buttons.element(boundBy: 0).tap()
         sleep(1)
         // The button relabels to "Continue Workout" once today has any

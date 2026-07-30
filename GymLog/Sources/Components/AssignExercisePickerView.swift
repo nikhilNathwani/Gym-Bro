@@ -13,9 +13,10 @@ struct AssignExercisePickerView: View {
 
     @State private var query = ""
     @State private var isBusy = false
+    @State private var addedTick = 0
     @FocusState private var isFocused: Bool
 
-    private var trimmed: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmed: String { query.trimmed }
 
     private var filtered: [Exercise] {
         guard !trimmed.isEmpty else { return [] }
@@ -44,6 +45,7 @@ struct AssignExercisePickerView: View {
             }
         }
         .disabled(isBusy)
+        .sensoryFeedback(.impact(weight: .light), trigger: addedTick)
     }
 
     private func resultRow(title: String, actionLabel: String, action: @escaping () async -> Void) -> some View {
@@ -61,6 +63,7 @@ struct AssignExercisePickerView: View {
         do {
             try await SupabaseService.shared.addExerciseToRoutine(routineId: routineId, exerciseId: exercise.id)
             query = ""
+            addedTick += 1
             await onChanged()
         } catch {
             onError(error.localizedDescription)
@@ -73,6 +76,7 @@ struct AssignExercisePickerView: View {
         do {
             try await SupabaseService.shared.createExercise(name: trimmed, routineId: routineId)
             query = ""
+            addedTick += 1
             await onChanged()
         } catch {
             onError(error.localizedDescription)

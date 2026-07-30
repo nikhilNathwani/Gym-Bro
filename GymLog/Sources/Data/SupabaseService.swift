@@ -320,23 +320,3 @@ final class SupabaseService {
             }
     }
 }
-
-// MARK: - Comma-list parsing (port of exercises/actions.ts:175-193)
-
-enum SetFieldsParsing {
-    static func splitCommaList(_ text: String) -> [String] {
-        text.split(separator: ",", omittingEmptySubsequences: false)
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-    }
-
-    static func parseDoubleOrNil(_ value: String?) -> Double? {
-        guard let value else { return nil }
-        return Double(value)
-    }
-
-    static func parseIntOrNil(_ value: String?) -> Int? {
-        guard let value else { return nil }
-        return Int(value)
-    }
-}

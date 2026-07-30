@@ -1,14 +1,14 @@
 import Foundation
 
-/// Owns one exercise's editable log state (sets, notes) and its lazy
-/// persistence to Supabase, independent of how that state gets laid out on
-/// screen. Split out of what used to be a single `InlineExerciseCard` view
-/// so `WorkoutSessionView` can render the read-only reference material
-/// (`ExerciseReferenceSection`: target, last time, cues, open-full-page
-/// link) in one independently-scrolling region and the actual input
-/// controls (`ExerciseLoggingDock`: steppers + notes) in a separate fixed
-/// dock alongside Prev/Next — both views share this same controller
-/// instance instead of duplicating state.
+/// Owns one exercise's editable state — today's log (sets, notes) *and* the
+/// exercise's own metadata (name, target, cues) — plus its lazy persistence
+/// to Supabase, independent of how that state gets laid out on screen.
+/// Shared by both places an exercise can be viewed/edited: mid-routine in
+/// `WorkoutSessionView`, and standalone (no Prev/Next) in
+/// `ExerciseDetailView` — these used to be two separate pages with
+/// duplicated, out-of-sync content (both showed target/cues; only the
+/// standalone one could edit them, or see full history) before being
+/// merged into one.
 ///
 /// Deliberately does NOT create a workout_session/exercise_log just because
 /// the exercise is being viewed — merely reading cues or checking last
@@ -34,8 +34,20 @@ import Foundation
 @MainActor
 @Observable
 final class ExerciseLogController {
-    let exercise: ExerciseDetail
+    // Not `let` — name/target/cues edits update this in place (optimistic,
+    // same pattern as every other save below), and `reloadExercise()`
+    // replaces it wholesale after a history-entry edit/delete, so the rest
+    // of the page (which reads straight from `exercise`) picks up the
+    // change reactively.
+    var exercise: ExerciseDetail
     let onLogged: () async -> Void
+    // Notified after a name/target/cues save. No-op by default since the
+    // standalone `ExerciseDetailView` has nothing else to keep in sync —
+    // `WorkoutSessionView` wires this to reload the *routine's* own
+    // exercises array, which otherwise would keep handing this controller
+    // stale metadata (a plain value-type copy taken once, at construction)
+    // every time Prev/Next rebuilds it for a different exercise.
+    let onExerciseUpdated: () async -> Void
     let onError: (String) -> Void
 
     struct EditableSet: Identifiable {
@@ -50,7 +62,19 @@ final class ExerciseLogController {
 
     var sets: [EditableSet] = []
     var notesDraft = ""
-    var isCuesExpanded = true
+
+    // The exercise's own metadata — editable inline wherever it's shown, no
+    // separate page-level "Edit mode" (see the type doc comment): each
+    // field just commits on blur, the same way `notesDraft` above already
+    // does. Seeded in `seed()`.
+    var nameDraft = ""
+    var targetDraft = ""
+    var cuesDraft = ""
+
+    // Collapsed by default — past sessions aren't the focus of this page,
+    // and could grow long over months of use. A native `DisclosureGroup`
+    // (`ExerciseHistorySection`), so this is just its `isExpanded` binding.
+    var isHistoryExpanded = false
 
     // Only one set shows its stepper controls at a time — completed sets
     // collapse to a compact read-only row (see `ExerciseLoggingSections`),
@@ -85,9 +109,15 @@ final class ExerciseLogController {
     private var creatingLogTask: Task<UUID?, Never>?
     private var pendingSetTasks: [Int: Task<Void, Never>] = [:]
 
-    init(exercise: ExerciseDetail, onLogged: @escaping () async -> Void, onError: @escaping (String) -> Void) {
+    init(
+        exercise: ExerciseDetail,
+        onLogged: @escaping () async -> Void,
+        onExerciseUpdated: @escaping () async -> Void = {},
+        onError: @escaping (String) -> Void
+    ) {
         self.exercise = exercise
         self.onLogged = onLogged
+        self.onExerciseUpdated = onExerciseUpdated
         self.onError = onError
         seed()
     }
@@ -106,6 +136,9 @@ final class ExerciseLogController {
     // MARK: - Seeding
 
     private func seed() {
+        nameDraft = exercise.name
+        targetDraft = exercise.subtitle ?? ""
+        cuesDraft = exercise.cues ?? ""
         if let todayLog = exercise.exerciseLogs.first(where: { Calendar.current.isDateInToday($0.createdAt) }) {
             todayLogId = todayLog.id
             // Can legitimately be empty — deleting the last set (down to
@@ -272,7 +305,7 @@ final class ExerciseLogController {
     }
 
     func commitNotes() {
-        let trimmed = notesDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = notesDraft.trimmed
         let normalized = trimmed.isEmpty ? nil : trimmed
         guard normalized != lastCommittedNotes else { return }
         lastCommittedNotes = normalized
@@ -283,6 +316,75 @@ final class ExerciseLogController {
             } catch {
                 onError(error.localizedDescription)
             }
+        }
+    }
+
+    // MARK: - Exercise metadata
+
+    /// Empty name reverts to whatever's persisted rather than saving a
+    /// blank — an exercise always needs a name, and this isn't the kind of
+    /// field where "clear it to remove" makes sense (unlike target/cues).
+    func saveName() {
+        let trimmed = nameDraft.trimmed
+        guard !trimmed.isEmpty else {
+            nameDraft = exercise.name
+            return
+        }
+        guard trimmed != exercise.name else { return }
+        Task {
+            do {
+                try await SupabaseService.shared.updateExerciseName(id: exercise.id, name: trimmed)
+                exercise.name = trimmed
+                await onExerciseUpdated()
+            } catch {
+                onError(error.localizedDescription)
+            }
+        }
+    }
+
+    func saveTarget() {
+        let trimmed = targetDraft.trimmed
+        guard trimmed != (exercise.subtitle ?? "") else { return }
+        Task {
+            do {
+                try await SupabaseService.shared.updateExerciseSubtitle(
+                    id: exercise.id, subtitle: trimmed.isEmpty ? nil : trimmed)
+                exercise.subtitle = trimmed.isEmpty ? nil : trimmed
+                await onExerciseUpdated()
+            } catch {
+                onError(error.localizedDescription)
+            }
+        }
+    }
+
+    func saveCues() {
+        let trimmed = cuesDraft.trimmed
+        guard cuesDraft != (exercise.cues ?? "") else { return }
+        Task {
+            do {
+                try await SupabaseService.shared.updateCues(
+                    exerciseId: exercise.id, cues: trimmed.isEmpty ? nil : cuesDraft)
+                exercise.cues = trimmed.isEmpty ? nil : cuesDraft
+                await onExerciseUpdated()
+            } catch {
+                onError(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Refetches the exercise wholesale — used after a past history entry
+    /// is edited or deleted (`ExerciseHistorySection`), since that changes
+    /// `exercise.exerciseLogs` in a way that's simplest to just re-read
+    /// from the server rather than reconcile locally. Doesn't touch
+    /// `sets`/`notesDraft` (those aren't re-seeded from this), so it can't
+    /// clobber whatever's still being actively edited in today's log.
+    func reloadExercise() async {
+        do {
+            if let detail = try await SupabaseService.shared.fetchExerciseDetail(id: exercise.id) {
+                exercise = detail
+            }
+        } catch {
+            onError(error.localizedDescription)
         }
     }
 

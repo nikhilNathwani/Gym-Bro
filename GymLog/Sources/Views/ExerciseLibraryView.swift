@@ -11,43 +11,56 @@ struct ExerciseLibraryView: View {
     @State private var pendingDeleteExercise: Exercise?
     @State private var renameTarget: Exercise?
     @State private var renameDraft = ""
+    @State private var destructiveActionTaken = false
+    @State private var savedTick = 0
 
     var body: some View {
         Group {
             if isLoading {
                 ProgressView()
+            } else if exercises.isEmpty {
+                ContentUnavailableView(
+                    "No Exercises", systemImage: "dumbbell",
+                    description: Text("Tap + to create one."))
             } else {
                 List {
-                    if exercises.isEmpty {
-                        Text("No exercises yet — create one below.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(exercises) { exercise in
-                            NavigationLink(value: AppRoute.exercise(exercise.id)) {
-                                Text(exercise.name)
-                                    .lineLimit(1)
+                    ForEach(exercises) { exercise in
+                        NavigationLink(value: AppRoute.exercise(exercise.id)) {
+                            Text(exercise.name)
+                                .lineLimit(1)
+                        }
+                        // `allowsFullSwipe: false` — without it, a full
+                        // swipe plays List's optimistic delete-and-collapse
+                        // animation before this confirmation dialog even
+                        // appears, so the row snaps back once the dialog
+                        // resolves (same bug fixed in `HistoryEntryView`/
+                        // `RoutineDetailView`'s swipe actions).
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                pendingDeleteExercise = exercise
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    pendingDeleteExercise = exercise
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                Button {
-                                    renameDraft = exercise.name
-                                    renameTarget = exercise
-                                } label: {
-                                    Label("Rename", systemImage: "pencil")
-                                }
-                                .tint(.accentColor)
+                            Button {
+                                renameDraft = exercise.name
+                                renameTarget = exercise
+                            } label: {
+                                Label("Rename", systemImage: "pencil")
                             }
+                            .tint(.accentColor)
                         }
                     }
                 }
             }
         }
-        .navigationTitle("Exercises")
+        // No nav bar title, matching the Routines tab's own root screen —
+        // same leading avatar button on both tab roots instead of one
+        // having a title and the other an account affordance.
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
+        }
         .sheet(isPresented: $showNewExercise) {
             NewExerciseView(onCreated: { _ in Task { await load() } })
         }
@@ -65,6 +78,7 @@ struct ExerciseLibraryView: View {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
+                destructiveActionTaken.toggle()
                 if let exercise = pendingDeleteExercise { Task { await deleteExercise(exercise) } }
             }
         }
@@ -81,6 +95,8 @@ struct ExerciseLibraryView: View {
             }
             Button("Cancel", role: .cancel) { renameTarget = nil }
         }
+        .sensoryFeedback(.warning, trigger: destructiveActionTaken)
+        .sensoryFeedback(.impact(weight: .light), trigger: savedTick)
         .errorAlert($errorMessage)
     }
 
@@ -105,7 +121,7 @@ struct ExerciseLibraryView: View {
     }
 
     private func renameExercise(_ exercise: Exercise) async {
-        let trimmed = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = renameDraft.trimmed
         guard !trimmed.isEmpty else {
             renameTarget = nil
             return
@@ -113,6 +129,7 @@ struct ExerciseLibraryView: View {
         do {
             try await SupabaseService.shared.updateExerciseName(id: exercise.id, name: trimmed)
             renameTarget = nil
+            savedTick += 1
             await load()
         } catch {
             errorMessage = error.localizedDescription

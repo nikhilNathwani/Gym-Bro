@@ -27,7 +27,7 @@ struct RoutineDetailView: View {
     @State private var titleDraft = ""
     @State private var showDeleteConfirm = false
     @State private var showAddExercise = false
-    @State private var pendingRemoveOffsets: IndexSet?
+    @State private var pendingRemoveExercise: RoutineExercise?
     @State private var errorMessage: String?
     @State private var destructiveActionTaken = false
 
@@ -65,8 +65,25 @@ struct RoutineDetailView: View {
                         } else {
                             ForEach(Array(routine.routineExercises.enumerated()), id: \.element.id) { index, entry in
                                 exerciseRow(entry.exercise, startIndex: index)
+                                    // `.swipeActions` with `allowsFullSwipe: false`,
+                                    // not `.onDelete` — `.onDelete`'s default swipe
+                                    // is a full swipe by default, which plays
+                                    // List's optimistic delete-and-collapse
+                                    // animation immediately, before this
+                                    // confirmation dialog even appears; since the
+                                    // actual removal doesn't happen until the
+                                    // dialog is confirmed, the row then snaps back
+                                    // (same bug fixed in `HistoryEntryView`).
+                                    // Costs the Edit-mode leading minus-circle
+                                    // affordance `.onDelete` would have added, but
+                                    // swipe-to-remove still works both in and out
+                                    // of Edit mode.
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) { pendingRemoveExercise = entry } label: {
+                                            Label("Remove", systemImage: "trash")
+                                        }
+                                    }
                             }
-                            .onDelete { offsets in pendingRemoveOffsets = offsets }
                             .onMove { source, destination in
                                 Task { await moveExercises(from: source, to: destination, routine: routine) }
                             }
@@ -94,7 +111,10 @@ struct RoutineDetailView: View {
                             // for a cosmetic haptic on what's still, at its
                             // core, a plain navigation push.
                             ZStack {
-                                NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: 0)) {
+                                NavigationLink(
+                                    value: AppRoute.workoutSession(
+                                        routineId: routineId, startIndex: continueStartIndex(routine))
+                                ) {
                                     EmptyView()
                                 }
                                 .opacity(0)
@@ -123,6 +143,7 @@ struct RoutineDetailView: View {
                         }
                     }
                 }
+                .refreshable { await reload() }
             } else if isLoading {
                 ProgressView()
             } else {
@@ -153,15 +174,15 @@ struct RoutineDetailView: View {
         .confirmationDialog(
             "Remove this exercise from the routine?",
             isPresented: Binding(
-                get: { pendingRemoveOffsets != nil },
-                set: { if !$0 { pendingRemoveOffsets = nil } }
+                get: { pendingRemoveExercise != nil },
+                set: { if !$0 { pendingRemoveExercise = nil } }
             ),
             titleVisibility: .visible
         ) {
             Button("Remove", role: .destructive) {
                 destructiveActionTaken.toggle()
-                if let offsets = pendingRemoveOffsets, let routine {
-                    Task { await removeExercises(at: offsets, routine: routine) }
+                if let entry = pendingRemoveExercise {
+                    Task { await removeExercise(entry) }
                 }
             }
         }
@@ -170,7 +191,7 @@ struct RoutineDetailView: View {
             if editing {
                 titleDraft = routine.map(displayName) ?? ""
             } else if wasEditing {
-                let trimmed = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                let trimmed = titleDraft.trimmed
                 if trimmed != (routine?.label ?? "") {
                     Task { await saveLabel() }
                 }
@@ -246,6 +267,25 @@ struct RoutineDetailView: View {
         routine.routineExercises.contains { todayLog($0.exercise)?.setLogs.isEmpty == false }
     }
 
+    /// Where "Continue Workout" should resume: the *last* exercise (by
+    /// routine order) with any sets logged today, not always index 0 and
+    /// not the first exercise with zero sets. Landing on the last-touched
+    /// exercise rather than skipping past it matters because a set count
+    /// here doesn't mean "finished" — there's no tracked target-vs-actual
+    /// completion, so an exercise with 2 of a planned 4 sets logged looks
+    /// identical to one that's fully done. Re-opening it (rather than
+    /// jumping to the next untouched exercise) costs at most one "Next"
+    /// tap if it really was finished, but never skips past one still in
+    /// progress — the worse failure mode, e.g. resuming after a mid-set
+    /// rest with the phone put away. Falls back to 0 (the start) if
+    /// nothing's logged yet today.
+    private func continueStartIndex(_ routine: RoutineDetail) -> Int {
+        let lastLoggedIndex = routine.routineExercises.lastIndex {
+            todayLog($0.exercise)?.setLogs.isEmpty == false
+        }
+        return lastLoggedIndex ?? 0
+    }
+
     private func load() async {
         isLoading = true
         defer { isLoading = false }
@@ -279,7 +319,7 @@ struct RoutineDetailView: View {
 
     private func saveLabel() async {
         do {
-            let label = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+            let label = titleDraft.trimmed
             try await SupabaseService.shared.updateRoutineLabel(id: routineId, label: label.isEmpty ? nil : label)
             await reload()
         } catch {
@@ -296,13 +336,10 @@ struct RoutineDetailView: View {
         }
     }
 
-    private func removeExercises(at offsets: IndexSet, routine: RoutineDetail) async {
-        let ids = offsets.map { routine.routineExercises[$0].id }
+    private func removeExercise(_ entry: RoutineExercise) async {
         do {
-            for id in ids {
-                try await SupabaseService.shared.removeExerciseFromRoutine(routineExerciseId: id)
-            }
-            pendingRemoveOffsets = nil
+            try await SupabaseService.shared.removeExerciseFromRoutine(routineExerciseId: entry.id)
+            pendingRemoveExercise = nil
             await reload()
         } catch {
             errorMessage = error.localizedDescription
