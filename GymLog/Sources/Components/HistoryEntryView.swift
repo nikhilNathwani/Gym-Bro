@@ -1,6 +1,10 @@
 import SwiftUI
 
-private let historyDateFormatter: DateFormatter = {
+/// Shared short date style ("7/31/26") for every logged-session date shown
+/// on the exercise page — History rows and the "Today's Log" section
+/// header alike — so today's entry reads as the same kind of thing as a
+/// past one, just the most recent.
+let logEntryDateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "M/d/yy"
     return formatter
@@ -11,8 +15,8 @@ private enum HistoryEditField: Hashable {
     case reps(Int)
 }
 
-/// One past logged session inside `ExerciseHistorySection`'s
-/// `DisclosureGroup`. Tap the summary to edit it, swipe to delete — same
+/// One past logged session inside `ExerciseHistorySection`. Tap the
+/// summary to edit it, swipe to delete — same
 /// idioms as a set row in "Today's Log" (tap-to-expand for editing, swipe
 /// reserved for the destructive action only), not the always-visible
 /// "Edit"/"Delete" text buttons and custom card background this used to
@@ -83,16 +87,15 @@ struct HistoryEntryView: View {
             beginEditing()
         } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text(historyDateFormatter.string(from: log.createdAt))
-                    .font(.subheadline.weight(.medium))
+                Text(logEntryDateFormatter.string(from: log.createdAt))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
                 Text(log.setsSummary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.body)
                     .monospacedDigit()
                 if let notes = log.notes, !notes.isEmpty {
                     Text("\u{201C}\(notes)\u{201D}")
-                        .font(.caption)
+                        .font(.body)
                         .italic()
                         .foregroundStyle(.secondary)
                 }
@@ -111,7 +114,17 @@ struct HistoryEntryView: View {
         // masks the confirmation prompt entirely. Forcing an explicit tap
         // on "Delete" avoids the premature animation altogether.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) { showDeleteConfirm = true } label: {
+            // Deferred past the current run loop turn — setting
+            // `showDeleteConfirm` synchronously here races the swipe
+            // action's own dismissal animation (same issue as the "Today's
+            // Log" set row's delete swipe action; see its own comment),
+            // which on-device tears the dialog down before it can be
+            // tapped, or swallows a tap that lands during that window.
+            Button(role: .destructive) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    showDeleteConfirm = true
+                }
+            } label: {
                 Label("Delete", systemImage: "trash")
             }
         }
@@ -161,7 +174,7 @@ struct HistoryEntryView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Set \(index + 1)")
-                    .font(.subheadline.weight(.medium))
+                    .font(.body.weight(.medium))
                 Spacer()
                 // Same domain constraint as Today's Log: only the last set
                 // can be removed, so nothing needs renumbering.

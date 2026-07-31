@@ -35,12 +35,46 @@ final class SupabaseService {
 
     // MARK: - Routines
 
+    /// Embeds every `workout_sessions` row per routine rather than a
+    /// server-side max, since PostgREST has no per-parent-row aggregate/limit
+    /// short of a dedicated view or RPC — fine at this app's scale (a
+    /// handful of routines, at most low hundreds of sessions each over
+    /// years of use). `Routine` itself can't decode this shape directly (its
+    /// `lastPerformedAt` is a flat `Date?`, not a nested array), so this
+    /// decodes into a private row type and reduces client-side, same
+    /// approach as `fetchRoutineDetail`'s own nested-embed sort.
     func fetchRoutines() async throws -> [Routine] {
-        try await client.from("routines")
-            .select("id, label, sort_order")
+        struct RoutineRow: Decodable {
+            let id: UUID
+            let label: String?
+            let sortOrder: Int
+            let workoutSessions: [SessionDate]
+
+            enum CodingKeys: String, CodingKey {
+                case id, label
+                case sortOrder = "sort_order"
+                case workoutSessions = "workout_sessions"
+            }
+        }
+        struct SessionDate: Decodable {
+            let performedAt: Date
+            enum CodingKeys: String, CodingKey { case performedAt = "performed_at" }
+        }
+
+        let rows: [RoutineRow] = try await client.from("routines")
+            .select("id, label, sort_order, workout_sessions(performed_at)")
             .order("sort_order")
             .execute()
             .value
+
+        return rows.map { row in
+            Routine(
+                id: row.id,
+                label: row.label,
+                sortOrder: row.sortOrder,
+                lastPerformedAt: row.workoutSessions.map(\.performedAt).max()
+            )
+        }
     }
 
     /// Nested-embed ordering (routine_exercises -> exercise -> exercise_logs
@@ -248,10 +282,16 @@ final class SupabaseService {
     /// invoke this lazily, only on the first real edit (a stepper tap, a
     /// typed value, or "Add set"), and add set_logs separately via
     /// createSetLog.
+    ///
+    /// `routineId` is `nil` when logged from the standalone Exercise Detail
+    /// page (no routine context there) and non-nil from `WorkoutSessionView`
+    /// — this is the only place `workout_sessions.routine_id` ever gets set,
+    /// which `fetchRoutines()` depends on for each routine's "last done"
+    /// subtitle.
     @discardableResult
-    func createExerciseLogForToday(exerciseId: UUID) async throws -> UUID {
+    func createExerciseLogForToday(exerciseId: UUID, routineId: UUID?) async throws -> UUID {
         let session: IDRow = try await client.from("workout_sessions")
-            .insert(NewWorkoutSession())
+            .insert(NewWorkoutSession(routineId: routineId))
             .select("id")
             .single()
             .execute()

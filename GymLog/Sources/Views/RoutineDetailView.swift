@@ -18,7 +18,6 @@ import SwiftUI
 /// tappable-through to that link.)
 struct RoutineDetailView: View {
     let routineId: UUID
-    @Binding var addExerciseTrigger: Bool
 
     @State private var routine: RoutineDetail?
     @State private var routineIndex = 0
@@ -159,6 +158,23 @@ struct RoutineDetailView: View {
         .toolbar {
             if routine != nil {
                 ToolbarItem(placement: .topBarTrailing) { EditButton() }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        // Refresh first in case an exercise was created
+                        // elsewhere (e.g. the Exercises tab) while this
+                        // routine screen stayed mounted in the background —
+                        // cheap insurance against a stale allExercises
+                        // snapshot, even though this wasn't reproducible as
+                        // an actual bug.
+                        Task {
+                            await reload()
+                            showAddExercise = true
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Add Exercise")
+                }
             }
         }
         .confirmationDialog(
@@ -207,17 +223,6 @@ struct RoutineDetailView: View {
                 )
             }
         }
-        .onChange(of: addExerciseTrigger) { _, _ in
-            // Refresh first in case an exercise was created elsewhere (e.g.
-            // the Exercises tab) while this routine screen stayed mounted
-            // in the background — cheap insurance against a stale
-            // allExercises snapshot, even though this wasn't reproducible
-            // as an actual bug.
-            Task {
-                await reload()
-                showAddExercise = true
-            }
-        }
         .task { await load() }
         .errorAlert($errorMessage)
     }
@@ -231,12 +236,12 @@ struct RoutineDetailView: View {
     private func exerciseRow(_ exercise: ExerciseDetail, startIndex: Int) -> some View {
         NavigationLink(value: AppRoute.workoutSession(routineId: routineId, startIndex: startIndex)) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(exercise.name)
+                Text("\(startIndex + 1). \(exercise.name)")
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 if let log = todayLog(exercise), !log.setLogs.isEmpty {
                     Text(log.setsSummary)
-                        .font(.caption)
+                        .font(.body)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }

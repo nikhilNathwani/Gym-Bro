@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nikhilnathwani.gymlog.refresh</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/nikhilnathwani/Documents/Projects/Gym Log/GymLog/scripts/refresh-device-build.sh</string>
+    </array>
+    <!-- Checked daily at 3:01am — 1 minute after `sudo pmset repeat wake`
+         brings the Mac up at 3:00am, giving Wi-Fi a moment to reconnect
+         before the script tries to reach the phone. The script itself
+         (refresh-device-build.sh) only actually rebuilds+reinstalls every
+         5th day; other days it exits immediately after a freshness check.
+         launchd tracks missed fires (e.g. Mac asleep past 3:01) and runs
+         this as soon as possible after the Mac wakes instead of skipping
+         it, so a missed 3am wake still self-heals the same day. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>1</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/nikhilnathwani/Library/Logs/gymlog-refresh-launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/nikhilnathwani/Library/Logs/gymlog-refresh-launchd.log</string>
+</dict>
+</plist>

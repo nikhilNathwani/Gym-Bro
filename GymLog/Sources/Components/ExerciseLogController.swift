@@ -40,6 +40,12 @@ final class ExerciseLogController {
     // of the page (which reads straight from `exercise`) picks up the
     // change reactively.
     var exercise: ExerciseDetail
+    // `nil` in the standalone `ExerciseDetailView` context (no routine to
+    // attribute the session to); the real routine id from
+    // `WorkoutSessionView`. Forwarded into `createExerciseLogForToday` so
+    // `workout_sessions.routine_id` is actually populated — see that
+    // function's doc comment.
+    let routineId: UUID?
     let onLogged: () async -> Void
     // Notified after a name/target/cues save. No-op by default since the
     // standalone `ExerciseDetailView` has nothing else to keep in sync —
@@ -70,11 +76,6 @@ final class ExerciseLogController {
     var nameDraft = ""
     var targetDraft = ""
     var cuesDraft = ""
-
-    // Collapsed by default — past sessions aren't the focus of this page,
-    // and could grow long over months of use. A native `DisclosureGroup`
-    // (`ExerciseHistorySection`), so this is just its `isExpanded` binding.
-    var isHistoryExpanded = false
 
     // Only one set shows its stepper controls at a time — completed sets
     // collapse to a compact read-only row (see `ExerciseLoggingSections`),
@@ -111,11 +112,13 @@ final class ExerciseLogController {
 
     init(
         exercise: ExerciseDetail,
+        routineId: UUID? = nil,
         onLogged: @escaping () async -> Void,
         onExerciseUpdated: @escaping () async -> Void = {},
         onError: @escaping (String) -> Void
     ) {
         self.exercise = exercise
+        self.routineId = routineId
         self.onLogged = onLogged
         self.onExerciseUpdated = onExerciseUpdated
         self.onError = onError
@@ -197,7 +200,7 @@ final class ExerciseLogController {
         }
         let task = Task<UUID?, Never> {
             do {
-                return try await SupabaseService.shared.createExerciseLogForToday(exerciseId: exercise.id)
+                return try await SupabaseService.shared.createExerciseLogForToday(exerciseId: exercise.id, routineId: routineId)
             } catch {
                 onError(error.localizedDescription)
                 return nil

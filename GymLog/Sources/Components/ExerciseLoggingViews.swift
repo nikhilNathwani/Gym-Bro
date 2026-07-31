@@ -94,25 +94,32 @@ struct ExerciseSummarySection: View {
 /// as "Cues"/"Today's Log" below it, rather than a hand-bolded `Text("Last
 /// Time")` living inside the title/target block above (that read as visually
 /// inconsistent with every other section header on the page).
+///
+/// Clear row background, same as the title/target block above it — this is
+/// reference text, not something you act on, so it sits flush against the
+/// app background rather than in a grouped card. That leaves the card
+/// background meaning one thing on this page: "you can edit this."
 struct ExerciseLastTimeSection: View {
     let log: ExerciseLog
 
     var body: some View {
-        Section("Last Time") {
+        Section(header: Text("Last Time").padding(.bottom, -40)) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(log.setsSummary)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.body)
                     .monospacedDigit()
                 if let notes = log.notes, !notes.isEmpty {
                     Text("\u{201C}\(notes)\u{201D}")
-                        .font(.caption)
+                        .font(.body)
                         .italic()
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.top, -16)
+            .padding(.bottom, 2)
         }
+        .listRowBackground(Color.clear)
     }
 }
 
@@ -121,18 +128,29 @@ struct ExerciseLastTimeSection: View {
 /// something that needs to be pinned above the inputs themselves. A plain
 /// native `Section` — same styling as "Today's Log"/"Last Time" — with an
 /// always-visible multi-line field, no separate collapse toggle: a hand-rolled
-/// Button-with-rotating-chevron header (this section's original design, and
-/// `ExerciseHistorySection`'s below) read as visually inconsistent with the
-/// native section headers elsewhere on this page, sat at a different
-/// indentation, and (found while writing an XCUITest regression check for
-/// it) didn't reliably register taps at all. Cues text is short enough in
-/// practice that collapsing it isn't worth reintroducing that for.
+/// Button-with-rotating-chevron header (this section's original design) read
+/// as visually inconsistent with the native section headers elsewhere on
+/// this page, sat at a different indentation, and (found while writing an
+/// XCUITest regression check for it) didn't reliably register taps at all.
+/// Cues text is short enough in practice that collapsing it isn't worth
+/// reintroducing that for.
+///
+/// The field itself is always there and always tappable — no separate "Edit"
+/// button or read/edit mode to juggle — but its row only takes on the
+/// grouped-card background while it actually has keyboard focus, via the
+/// same `focusedField` this page already tracks for commit-on-blur. Cues are
+/// set once and read many times, so the row spends most of its life looking
+/// like plain reference text (matching "Last Time" below it); the card only
+/// appears for the moment you're actually typing into it, which is the same
+/// visual state "Today's Log" is in all the time.
 struct ExerciseCuesSection: View {
     let controller: ExerciseLogController
     var focusedField: FocusState<LoggingFocusField?>.Binding
 
+    private var isEditing: Bool { focusedField.wrappedValue == .cues }
+
     var body: some View {
-        Section("Cues") {
+        Section(header: Text("Cues").padding(.bottom, -28)) {
             TextField(
                 "Add cues — form notes, setup reminders, etc.",
                 text: Binding(get: { controller.cuesDraft }, set: { controller.cuesDraft = $0 }),
@@ -140,22 +158,25 @@ struct ExerciseCuesSection: View {
             )
             .lineLimit(3...10)
             .focused(focusedField, equals: .cues)
+            .padding(.top, isEditing ? 0 : -8)
         }
+        .listRowBackground(isEditing ? nil : Color.clear)
+        .animation(.default, value: isEditing)
     }
 }
 
-/// Past logged sessions — collapsed by default (see the type doc comment on
-/// `ExerciseLogController.isHistoryExpanded`), expanded via this page's own
-/// "View history" link or by tapping the header here directly. Today's own
-/// entry is excluded — that's already the "Today's Log" section above,
-/// showing it again here would just be the same data twice. A native
-/// `DisclosureGroup`, not a hand-rolled Button-with-rotating-chevron (this
-/// section's original design) — same reasoning as `ExerciseCuesSection`'s
-/// doc comment: visually inconsistent with real `Section` headers, and its
-/// tap target didn't reliably register at all (an XCUITest regression check
-/// written alongside this redesign caught it hanging three different ways —
-/// by label, by identifier, even a raw coordinate tap — while the equivalent
-/// `DisclosureGroup` here has had no such issue).
+/// Past logged sessions — always expanded, same as "Last Time"/"Cues" above
+/// it. Used to be a collapsed `DisclosureGroup` (a hand-rolled toggle before
+/// that, which had its own tap-reliability problems — see git history), but
+/// sitting at the bottom of the page it never pushes anything else down by
+/// staying open, so the collapse/expand toggle wasn't buying anything besides
+/// a visual mismatch with every other section header on the page. Today's
+/// own entry is excluded — that's already the "Today's Log" section above,
+/// showing it again here would just be the same data twice.
+///
+/// Clear row background, same as "Last Time"/"Cues" — reference material,
+/// not something you edit, so it sits flush against the app background
+/// rather than in a grouped card.
 struct ExerciseHistorySection: View {
     let controller: ExerciseLogController
 
@@ -166,28 +187,23 @@ struct ExerciseHistorySection: View {
     }
 
     var body: some View {
-        Section {
-            DisclosureGroup(
-                isExpanded: Binding(get: { controller.isHistoryExpanded }, set: { controller.isHistoryExpanded = $0 })
-            ) {
-                if pastLogs.isEmpty {
-                    Text("No past sessions yet.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(pastLogs) { log in
-                        HistoryEntryView(
-                            log: log,
-                            onChanged: { await controller.reloadExercise() },
-                            onError: controller.onError
-                        )
-                    }
+        Section(header: Text("History").padding(.bottom, -28)) {
+            if pastLogs.isEmpty {
+                Text("No past sessions yet.")
+                    .foregroundStyle(.secondary)
+                    .padding(.top, -8)
+            } else {
+                ForEach(Array(pastLogs.enumerated()), id: \.element.id) { index, log in
+                    HistoryEntryView(
+                        log: log,
+                        onChanged: { await controller.reloadExercise() },
+                        onError: controller.onError
+                    )
+                    .padding(.top, index == 0 ? -8 : 0)
                 }
-            } label: {
-                Text("History")
             }
-            .accessibilityIdentifier("historyToggle")
-            .sensoryFeedback(.selection, trigger: controller.isHistoryExpanded)
         }
+        .listRowBackground(Color.clear)
     }
 }
 
@@ -220,7 +236,7 @@ struct ExerciseLoggingSections: View {
     @State private var showDeleteSetConfirm = false
 
     var body: some View {
-        Section("Today's Log") {
+        Section(logEntryDateFormatter.string(from: Date())) {
             ForEach(controller.sets, id: \.setNumber) { set in
                 setRow(set)
                     // The row's identifier lives on an invisible full-size
@@ -244,7 +260,20 @@ struct ExerciseLoggingSections: View {
                     // swipe silently auto-delete a set.
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if isLastRemovable(set) {
-                            Button(role: .destructive) { showDeleteSetConfirm = true } label: {
+                            // Setting `showDeleteSetConfirm` synchronously here
+                            // races the swipe action's own dismissal animation —
+                            // on-device (not always reproducible in the
+                            // simulator), the confirmation dialog flashes and
+                            // is immediately torn down before it can be tapped,
+                            // and a tap landing during that window falls through
+                            // to whatever's underneath rather than the dialog's
+                            // own button. Deferring past the current run loop
+                            // turn lets the swipe-close animation finish first.
+                            Button(role: .destructive) {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                    showDeleteSetConfirm = true
+                                }
+                            } label: {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
@@ -299,7 +328,7 @@ struct ExerciseLoggingSections: View {
     private func expandedSetRow(_ set: ExerciseLogController.EditableSet) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Set \(set.setNumber)")
-                .font(.subheadline.weight(.medium))
+                .font(.body.weight(.medium))
 
             HStack(spacing: 14) {
                 fieldStepper(
@@ -337,21 +366,19 @@ struct ExerciseLoggingSections: View {
 
     /// A completed set — collapsed to one line, no stepper. Tapping it
     /// brings the steppers back for the rare case of correcting an
-    /// already-logged set — same tap-to-expand convention as the "Cues"/
-    /// "History" headers below (`ExerciseCuesSection`/`ExerciseHistorySection`),
-    /// not a new idiom.
+    /// already-logged set — same tap-to-focus convention as the "Cues"
+    /// field below (`ExerciseCuesSection`), not a new idiom.
     private func collapsedSetRow(_ set: ExerciseLogController.EditableSet) -> some View {
         Button {
             controller.expandedSetNumber = set.setNumber
         } label: {
             HStack {
                 Text("Set \(set.setNumber)")
-                    .font(.subheadline.weight(.medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
                 Spacer()
                 Text("\(formatNumber(set.weight)) × \(set.reps)")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.body)
                     .monospacedDigit()
             }
             .padding(.vertical, 8)
@@ -414,7 +441,7 @@ struct SetValueStepper<Field: Hashable>: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(label)
-                .font(.caption2)
+                .font(.body)
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 2)
             textField

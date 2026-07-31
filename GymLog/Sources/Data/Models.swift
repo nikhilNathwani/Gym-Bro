@@ -6,10 +6,19 @@ struct Routine: Codable, Identifiable, Hashable {
     let id: UUID
     var label: String?
     var sortOrder: Int
+    // Not decoded directly from any single query shape — `fetchRoutines()`
+    // computes this client-side from an embedded `workout_sessions` array
+    // (see its doc comment) and constructs `Routine` manually, so this stays
+    // nil wherever else `Routine` is decoded straight from a flatter select
+    // (e.g. `createRoutine`'s own response), which is the correct value
+    // there too since a routine that was just created can't have a prior
+    // session anyway.
+    var lastPerformedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id, label
         case sortOrder = "sort_order"
+        case lastPerformedAt
     }
 }
 
@@ -54,7 +63,7 @@ struct ExerciseLog: Codable, Identifiable, Hashable {
                 let reps = set.reps.map(String.init) ?? "–"
                 return "\(weight)×\(reps)"
             }
-            .joined(separator: " · ")
+            .joined(separator: ", ")
     }
 }
 
@@ -160,7 +169,13 @@ struct ExerciseCuesUpdate: Encodable {
     var cues: String?
 }
 
-struct NewWorkoutSession: Encodable {}
+struct NewWorkoutSession: Encodable {
+    var routineId: UUID? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case routineId = "routine_id"
+    }
+}
 
 struct NewExerciseLog: Encodable {
     var sessionId: UUID

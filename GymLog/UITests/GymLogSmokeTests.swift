@@ -79,19 +79,26 @@ final class GymLogSmokeTests: XCTestCase {
         waitAndTap("Day A - Vertical")
         screenshot("01-routine-detail")
 
-        // 1b. The floating "+" is context-aware down to the pushed screen:
-        // inside a routine it should open "Add Exercise" here, not create a
-        // new routine on the list behind it. Create a disposable exercise
-        // here (rather than reusing "Seated Dumbbell Overhead Press" or any
-        // other real seeded exercise) and use it for all the logging/editing
-        // steps below — a real exercise might already have a real "today"
-        // log from the user's own phone use, and stepper taps update
-        // whatever today's log already contains rather than creating
-        // separate test data, so touching a real exercise here risks
-        // silently mutating genuine workout data (this happened once during
-        // development — see INLINE_LOGGING_HANDOFF.md).
-        waitAndTap("Add", exact: true)
+        // 1b. Each screen owns its own trailing "+" toolbar button now (see
+        // RoutinesListView's type doc comment for why) — this one is
+        // RoutineDetailView's "Add Exercise", which opens a sheet whose own
+        // nav title is also "Add Exercise". Asserting on the nav bar
+        // specifically (rather than a second `waitAndTap` on the same
+        // label) avoids a race where that query could still match the
+        // toolbar button underneath the just-presented sheet instead of the
+        // sheet's own title. Create a disposable exercise here (rather than
+        // reusing "Seated Dumbbell Overhead Press" or any other real seeded
+        // exercise) and use it for all the logging/editing steps below — a
+        // real exercise might already have a real "today" log from the
+        // user's own phone use, and stepper taps update whatever today's
+        // log already contains rather than creating separate test data, so
+        // touching a real exercise here risks silently mutating genuine
+        // workout data (this happened once during development — see
+        // INLINE_LOGGING_HANDOFF.md).
         waitAndTap("Add Exercise", exact: true)
+        XCTAssertTrue(
+            app.navigationBars["Add Exercise"].waitForExistence(timeout: 8),
+            "Add Exercise sheet did not appear")
         screenshot("01b-add-exercise-sheet")
         let exerciseName = "UITest Inline Logging"
         let addExerciseField = textField(placeholder: "Search or create an exercise…")
@@ -298,15 +305,12 @@ final class GymLogSmokeTests: XCTestCase {
         keyboardDone.tap()
         sleep(1)
 
-        // Expands the new History section (a native `DisclosureGroup`) —
-        // previously an unwired "View history" placeholder link (only
-        // shown once there's a prior day to peek at, which this fresh
-        // exercise never has) pointing at the old separate page.
-        tapId("historyToggle")
-        sleep(1)
+        // History is always expanded now (no collapse toggle) — confirm
+        // the empty state shows directly for a fresh exercise with no
+        // prior sessions.
         XCTAssertTrue(
             app.staticTexts["No past sessions yet."].waitForExistence(timeout: 5),
-            "History should expand and show the empty state for a fresh exercise")
+            "History should show the empty state for a fresh exercise")
         screenshot("04b-history-expanded")
 
         // Exit the session back to the routine's plain list — a single
@@ -353,12 +357,12 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         screenshot("08-back-to-routines")
 
-        // 7. The floating "+" creates a routine (context-aware: we're at
-        // the root screen, not inside a routine or the exercise library),
-        // then delete it via the Edit view's "Delete this routine" button
-        // (self-cleaning). Replaces the old "..." menu, which felt like
-        // overkill for a single destructive action.
-        waitAndTap("Add", exact: true)
+        // 7. RoutinesListView's Edit and Add Routine now share one trailing
+        // "•••" ("More") menu, so this opens it first — creates a routine,
+        // then deletes it via the Edit view's "Delete this routine" button
+        // (self-cleaning).
+        waitAndTap("More", exact: true)
+        waitAndTap("Add Routine", exact: true)
         sleep(1)
         screenshot("09-new-routine-created")
         waitAndTap("Edit", exact: true)
@@ -376,9 +380,8 @@ final class GymLogSmokeTests: XCTestCase {
         sleep(1)
         screenshot("11-exercise-library")
 
-        // 9. Same floating "+", now context-aware for creating an exercise
-        // since the Exercise Library is what's on top of the stack.
-        waitAndTap("Add", exact: true)
+        // 9. ExerciseLibraryView's own trailing "+" ("New Exercise").
+        waitAndTap("New Exercise", exact: true)
         screenshot("12-new-exercise-sheet")
         let newNameField = textField(placeholder: "Name")
         newNameField.tap()
@@ -407,7 +410,21 @@ final class GymLogSmokeTests: XCTestCase {
             let row = app.descendants(matching: .any)
                 .matching(NSPredicate(format: "label CONTAINS[c] %@", substring))
                 .firstMatch
-            guard row.waitForExistence(timeout: 5) else { return }
+            // Rows are taller now (easier tap targets — see
+            // ExerciseLibraryView), so fewer fit on screen than before, and
+            // a "UITest …" row alphabetized near the bottom of a growing
+            // real exercise list can start off-screen entirely. A native
+            // `List` virtualizes off-screen rows out of the accessibility
+            // tree, so a plain `waitForExistence` never finds one that
+            // hasn't been scrolled into view — swipe up first until it
+            // appears (or we give up), same idea as the async-load
+            // waitForExistence pattern already used elsewhere in this file.
+            var scrollAttempts = 0
+            while !row.exists && scrollAttempts < 10 {
+                app.swipeUp()
+                scrollAttempts += 1
+            }
+            XCTAssertTrue(row.waitForExistence(timeout: 5), "Missing exercise row to clean up: \(substring)")
             row.swipeLeft()
             waitAndTap("Delete", exact: true)
             waitAndTap("Delete", exact: true) // confirmationDialog's own button

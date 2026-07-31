@@ -32,27 +32,3 @@ func formatNumber(_ value: Double) -> String {
     }
     return String(value)
 }
-
-/// Placeholder auth/profile entry point (Todoist-style) — not wired up yet.
-/// Shared by both tab roots' leading toolbar slot (`RoutinesListView`,
-/// `ExerciseLibraryView`) so their chrome matches instead of one tab having
-/// an identity/account affordance the other lacks.
-struct AccountAvatarButton: View {
-    var body: some View {
-        Button {} label: {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(Color(.systemGray4))
-                    .frame(width: 28, height: 28)
-                    .overlay {
-                        Text("N")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                Text("Nikhil")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
-            }
-        }
-    }
-}

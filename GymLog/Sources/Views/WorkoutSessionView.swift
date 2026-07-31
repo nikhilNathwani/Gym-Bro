@@ -62,7 +62,7 @@ struct WorkoutSessionView: View {
             ToolbarItem(placement: .principal) {
                 if !exercises.isEmpty {
                     Text("\(currentIndex + 1) of \(exercises.count)")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -192,6 +192,7 @@ struct WorkoutSessionView: View {
         }
         controller = ExerciseLogController(
             exercise: exercises[currentIndex],
+            routineId: routineId,
             onLogged: { await reload() },
             onExerciseUpdated: { await reload() },
             onError: { errorMessage = $0 }

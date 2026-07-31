@@ -4,7 +4,7 @@ import SwiftUI
 struct GymLogApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RoutinesListView()
         }
     }
 }

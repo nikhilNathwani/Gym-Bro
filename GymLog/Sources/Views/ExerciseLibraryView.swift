@@ -2,11 +2,9 @@ import SwiftUI
 
 /// Port of exercises/page.tsx + ExerciseLibraryList.tsx. Pushed from
 /// `RoutinesListView`'s toolbar icon (its own `NavigationStack` hosts this,
-/// same routes as everywhere else in the app) — not a tab root anymore, so
-/// it gets a plain system back chevron instead of an account avatar button.
+/// same routes as everywhere else in the app), so its leading toolbar slot
+/// is the automatic back chevron rather than a custom leading item.
 struct ExerciseLibraryView: View {
-    @Binding var createTrigger: Bool
-
     @State private var exercises: [Exercise] = []
     @State private var isLoading = true
     @State private var showNewExercise = false
@@ -16,6 +14,12 @@ struct ExerciseLibraryView: View {
     @State private var renameDraft = ""
     @State private var destructiveActionTaken = false
     @State private var savedTick = 0
+    @State private var searchText = ""
+
+    private var filteredExercises: [Exercise] {
+        guard !searchText.trimmed.isEmpty else { return exercises }
+        return exercises.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
 
     var body: some View {
         Group {
@@ -25,12 +29,22 @@ struct ExerciseLibraryView: View {
                 ContentUnavailableView(
                     "No Exercises", systemImage: "dumbbell",
                     description: Text("Tap + to create one."))
+            } else if filteredExercises.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             } else {
                 List {
-                    ForEach(exercises) { exercise in
+                    ForEach(filteredExercises) { exercise in
                         NavigationLink(value: AppRoute.exercise(exercise.id)) {
+                            // Taller rows, matching Routines' own row style —
+                            // fewer exercises visible per screen, but that
+                            // trade is worth it now that `.searchable` above
+                            // covers finding a specific one quickly, and the
+                            // bigger tap target reads as less information-
+                            // dense than the previous compact default row.
                             Text(exercise.name)
-                                .lineLimit(1)
+                                .font(.title3.weight(.semibold))
+                                .lineLimit(2)
+                                .padding(.vertical, 16)
                         }
                         // `allowsFullSwipe: false` — without it, a full
                         // swipe plays List's optimistic delete-and-collapse
@@ -70,19 +84,25 @@ struct ExerciseLibraryView: View {
                 .contentMargins(.top, 8, for: .scrollContent)
             }
         }
-        // Large title, same Apple Notes-style treatment as Routines — but
-        // no avatar button here; the back chevron (automatic for a pushed
-        // screen) already occupies the leading slot.
+        // Large title, same Apple Notes-style treatment as Routines.
         .navigationTitle("Exercises")
         .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $searchText, prompt: "Search Exercises")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showNewExercise = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel("New Exercise")
+            }
+        }
         .sheet(isPresented: $showNewExercise) {
             NewExerciseView(onCreated: { _ in Task { await load() } })
         }
         .task { await load() }
         .refreshable { await load() }
-        .onChange(of: createTrigger) { _, _ in
-            showNewExercise = true
-        }
         .confirmationDialog(
             "Delete this exercise? This removes it from every routine and deletes its log history. This cannot be undone.",
             isPresented: Binding(

@@ -1,17 +1,30 @@
 import SwiftUI
 
-/// Port of page.tsx (home / "/"). The app's single root screen — also owns
-/// the one shared `NavigationStack` (see `RootView`), including the push
-/// into `ExerciseLibraryView` via the toolbar icon below, so its
-/// `navigationDestination` declarations cover every route in the app.
+/// Port of page.tsx (home / "/"). The app's single root screen (hosted
+/// directly by `GymLogApp`'s `WindowGroup`) — also owns the one shared
+/// `NavigationStack`, including the push into `ExerciseLibraryView` via the
+/// toolbar icon below, so its `navigationDestination` declarations cover
+/// every route in the app.
+///
+/// Each pushed screen owns its own "add" action now (Routines here,
+/// Exercises in `ExerciseLibraryView`, "Add Exercise" in
+/// `RoutineDetailView`) rather than a single shared floating "+" hoisted up
+/// to a former `RootView` shell — that FAB deliberately ignored the
+/// keyboard safe area so it wouldn't drift when a normal text field
+/// focused, which broke once iOS 26's `.searchable()` started docking its
+/// own floating search field in that same bottom-right corner: the FAB's
+/// higher z-order sat on top of the search field's clear button and ate
+/// the tap. A per-screen nav-bar button can't overlap floating content at
+/// all, since it isn't in the same coordinate space — removes the whole
+/// class of bug instead of patching this one instance of it.
+///
+/// Here specifically, Edit and Add Routine share one trailing "•••" menu
+/// rather than each being its own icon — a lone floating "+" reads fine,
+/// but next to the existing dumbbell icon and an EditButton it made three
+/// trailing icons on a large-title screen, which read as cluttered. Add
+/// Routine is also a rare action once a program is actually set up, so it
+/// doesn't need to be as reachable as it was as a provisional floating "+".
 struct RoutinesListView: View {
-    @Binding var createTrigger: Bool
-    @Binding var createExerciseTrigger: Bool
-    @Binding var addExerciseTrigger: Bool
-    @Binding var isRoutineDetailActive: Bool
-    @Binding var isExerciseLibraryActive: Bool
-    @Binding var isWorkoutSessionActive: Bool
-
     @State private var path = NavigationPath()
     @State private var routines: [Routine] = []
     @State private var isLoading = true
@@ -22,6 +35,10 @@ struct RoutinesListView: View {
     @State private var renameDraft = ""
     @State private var destructiveActionTaken = false
     @State private var savedTick = 0
+
+    @Environment(\.editMode) private var editMode
+
+    private var isEditing: Bool { editMode?.wrappedValue.isEditing ?? false }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -45,7 +62,10 @@ struct RoutinesListView: View {
                     List {
                         ForEach(Array(routines.enumerated()), id: \.element.id) { index, routine in
                             NavigationLink(value: AppRoute.routine(routine.id)) {
-                                RoutineRow(title: displayName(for: routine, index: index))
+                                RoutineRow(
+                                    title: displayName(for: routine, index: index),
+                                    subtitle: lastPerformedText(for: routine)
+                                )
                             }
                             // `allowsFullSwipe: false` — same reasoning as
                             // `ExerciseLibraryView`/`HistoryEntryView`'s own
@@ -88,14 +108,11 @@ struct RoutinesListView: View {
             }
             // A real large title ("Routines"), Apple Notes-style (its main
             // list shows "All iCloud" the same way) — previously no title
-            // at all, just the avatar button, which read as unfinished/
-            // nameless compared to Notes' own big bold heading. The avatar
-            // still sits in the slim bar above it; a large title and a
-            // leading toolbar item don't compete for space, they stack.
+            // at all, just the placeholder avatar button, which read as
+            // unfinished/nameless compared to Notes' own big bold heading.
             .navigationTitle("Routines")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) { AccountAvatarButton() }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         path.append(AppRoute.exerciseLibrary)
@@ -104,37 +121,48 @@ struct RoutinesListView: View {
                     }
                     .accessibilityLabel("Exercises")
                 }
-                if !routines.isEmpty {
-                    ToolbarItem(placement: .navigationBarTrailing) { EditButton() }
+                // Edit and Add Routine combined into one menu rather than
+                // two more standalone icons — three trailing icons (this
+                // plus the dumbbell above) read as cluttered for a large-
+                // title screen, and "Add Routine" in particular is a rare
+                // action once a program is actually set up, so it doesn't
+                // need its own always-visible button the way it did as a
+                // provisional floating "+".
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        if !routines.isEmpty {
+                            Button {
+                                editMode?.wrappedValue = isEditing ? .inactive : .active
+                            } label: {
+                                Label(isEditing ? "Done" : "Edit", systemImage: isEditing ? "checkmark" : "pencil")
+                            }
+                        }
+                        Button {
+                            Task { await createRoutine() }
+                        } label: {
+                            Label("Add Routine", systemImage: "plus")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .accessibilityLabel("More")
                 }
             }
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
                 case .routine(let id):
-                    RoutineDetailView(routineId: id, addExerciseTrigger: $addExerciseTrigger)
-                        .onAppear { isRoutineDetailActive = true }
-                        .onDisappear { isRoutineDetailActive = false }
+                    RoutineDetailView(routineId: id)
                 case .exercise(let id): ExerciseDetailView(exerciseId: id)
                 case .workoutSession(let routineId, let startIndex):
                     WorkoutSessionView(routineId: routineId, startIndex: startIndex)
-                        .onAppear {
-                            isRoutineDetailActive = false
-                            isWorkoutSessionActive = true
-                        }
-                        .onDisappear { isWorkoutSessionActive = false }
                 case .exerciseLibrary:
-                    ExerciseLibraryView(createTrigger: $createExerciseTrigger)
-                        .onAppear { isExerciseLibraryActive = true }
-                        .onDisappear { isExerciseLibraryActive = false }
+                    ExerciseLibraryView()
                 }
             }
         }
         .task { await load() }
         .onChange(of: path) { _, newPath in
             if newPath.isEmpty { Task { await load() } }
-        }
-        .onChange(of: createTrigger) { _, _ in
-            Task { await createRoutine() }
         }
         .confirmationDialog(
             "Delete this routine? This cannot be undone.",
@@ -175,6 +203,20 @@ struct RoutinesListView: View {
     private func displayName(for routine: Routine, index: Int) -> String {
         guard let label = routine.label, !label.isEmpty else { return RoutineLetter.forIndex(index) }
         return label
+    }
+
+    private static let lastPerformedFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter
+    }()
+
+    /// `nil` for a routine with no logged session yet (e.g. a freshly
+    /// created one, or one you haven't gotten around to) — no subtitle at
+    /// all reads better here than a naggy "Never logged."
+    private func lastPerformedText(for routine: Routine) -> String? {
+        guard let date = routine.lastPerformedAt else { return nil }
+        return "Last done \(Self.lastPerformedFormatter.localizedString(for: date, relativeTo: Date()))"
     }
 
     private func load() async {
@@ -234,8 +276,9 @@ struct RoutinesListView: View {
     }
 }
 
-/// A routine row's content — just the title, with generous vertical
-/// padding for a taller, easier tap target than a default list row.
+/// A routine row's content — title plus an optional "Last done …"
+/// subtitle, with generous vertical padding for a taller, easier tap
+/// target than a default list row.
 ///
 /// Used to pair the title with a leading icon inside its own rounded,
 /// tinted card — a carryover from when these were square grid tiles with
@@ -251,14 +294,22 @@ struct RoutinesListView: View {
 /// indicator; one drawn here too would double up.
 private struct RoutineRow: View {
     let title: String
+    let subtitle: String?
 
     var body: some View {
-        Text(title)
-            .font(.title3.weight(.semibold))
-            .foregroundStyle(.primary)
-            .lineLimit(2)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 16)
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 16)
     }
 }
