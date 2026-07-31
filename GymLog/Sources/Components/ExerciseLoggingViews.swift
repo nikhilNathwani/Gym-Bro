@@ -21,6 +21,13 @@ struct ExercisePageList: View {
 
     var body: some View {
         List {
+            // Name/target and the Add Set/notes controls now share ONE
+            // native `Section` — one continuous white rounded card for
+            // everything you actually *input* on this page, rather than a
+            // plain flush title floating above an unrelated card below it.
+            // Last Time/Cues/History stay exactly as they were (each its
+            // own `Section` with a clear row background, flush against the
+            // page background) — this only touches what's above them.
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField(
@@ -31,22 +38,21 @@ struct ExercisePageList: View {
                     .focused(focusedField, equals: .name)
                     ExerciseSummarySection(controller: controller, focusedField: focusedField)
                 }
-                // Zero horizontal row insets (below) put this content flush
-                // with the page's left margin, matching a plain page title
-                // rather than an indented card — but `.insetGrouped` still
-                // clips each section's first/last row to a rounded-corner
-                // mask regardless of the (clear) row background, and this
-                // is a single-row section, so both corners are rounded on
-                // both edges. 4pt of vertical padding sat inside that
-                // corner radius and clipped the corner off whatever glyph
-                // (e.g. "25×10"'s "2") landed there; this needs to clear
-                // the radius, not just add a little breathing room.
-                .padding(.vertical, 14)
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
+                .padding(.vertical, 6)
+                // No native row separator below name/target — within the
+                // card, name/target and Add Set are one continuous block,
+                // not two things divided by a rule.
+                .listRowSeparator(.hidden)
 
-            ExerciseLoggingSections(controller: controller, focusedField: focusedField)
+                ExerciseLoggingSections(controller: controller, focusedField: focusedField)
+            }
+
+            // No explicit divider below this card into "Last Time" — once
+            // name/target/Add Set/notes became one shared white card (see
+            // above), the card's own edge already reads as a clear boundary
+            // against the plain background "Last Time"/"Cues"/"History"
+            // sit on; a hand-drawn rule in that gap turned out to be
+            // redundant on top of it, not an extra signal.
 
             // A log can legitimately have zero sets (see `seed()`'s doc
             // comment on `ExerciseLogController` — deleting the last set
@@ -99,6 +105,16 @@ struct ExerciseSummarySection: View {
 /// reference text, not something you act on, so it sits flush against the
 /// app background rather than in a grouped card. That leaves the card
 /// background meaning one thing on this page: "you can edit this."
+///
+/// The header-to-content gap used to come from *two* stacked negative
+/// paddings — `-40` on the header, `-16` on the content `VStack` — and their
+/// combined overlap wasn't a fixed amount: it came out much smaller whenever
+/// the optional notes line was present (measured ~10pt with a note vs. ~34pt
+/// without one on the same device), since the second negative padding was
+/// pulling a *taller* two-line block up by the same nominal amount, not
+/// pulling the gap itself to a fixed size. Only the header keeps a negative
+/// pad now — content-height-independent, so the gap is identical whether or
+/// not there's a note.
 struct ExerciseLastTimeSection: View {
     let log: ExerciseLog
 
@@ -116,7 +132,6 @@ struct ExerciseLastTimeSection: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.top, -16)
             .padding(.bottom, 2)
         }
         .listRowBackground(Color.clear)
@@ -220,15 +235,15 @@ enum LoggingFocusField: Hashable {
     case notes
 }
 
-/// The current exercise's sets + notes, as native `List` `Section`s — meant
-/// to be placed directly inside a `List` (see `WorkoutSessionView`), not
-/// used standalone. Leans entirely on stock components rather than custom
-/// ones: a real `Section` header instead of a hand-drawn all-caps label, a
-/// real `Stepper` for each weight/reps value instead of a custom-drawn +/-
-/// button pair, and real `.swipeActions` for undoing the last set instead
-/// of a persistent trash icon. An earlier version of this screen reinvented
-/// all three, which is most of why it read as a custom "fitness dashboard"
-/// rather than an iOS form.
+/// The current exercise's sets + notes, as native `List` rows — meant to be
+/// placed directly inside a `Section` alongside name/target (see
+/// `ExercisePageList`, which now shares one `Section`/card between the two),
+/// not used standalone. Leans entirely on stock components rather than
+/// custom ones: a real `Stepper` for each weight/reps value instead of a
+/// custom-drawn +/- button pair, and real `.swipeActions` for undoing the
+/// last set instead of a persistent trash icon. An earlier version of this
+/// screen reinvented both, which is most of why it read as a custom
+/// "fitness dashboard" rather than an iOS form.
 struct ExerciseLoggingSections: View {
     let controller: ExerciseLogController
     var focusedField: FocusState<LoggingFocusField?>.Binding
@@ -236,7 +251,7 @@ struct ExerciseLoggingSections: View {
     @State private var showDeleteSetConfirm = false
 
     var body: some View {
-        Section(logEntryDateFormatter.string(from: Date())) {
+        Group {
             ForEach(controller.sets, id: \.setNumber) { set in
                 setRow(set)
                     // The row's identifier lives on an invisible full-size
@@ -260,6 +275,18 @@ struct ExerciseLoggingSections: View {
                     // swipe silently auto-delete a set.
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if isLastRemovable(set) {
+                            // No `role: .destructive` here — that role makes
+                            // List perform its own optimistic row-collapse
+                            // animation the instant the button is tapped,
+                            // *before* this closure runs, regardless of
+                            // whether the underlying data actually changes
+                            // yet. Since nothing is deleted until the
+                            // confirmation dialog below is confirmed, the row
+                            // then snapped back after that animation finished
+                            // — reading as "deleted, then un-deleted itself."
+                            // A plain button tinted red keeps the same visual
+                            // without the automatic animation.
+                            //
                             // Setting `showDeleteSetConfirm` synchronously here
                             // races the swipe action's own dismissal animation —
                             // on-device (not always reproducible in the
@@ -269,13 +296,14 @@ struct ExerciseLoggingSections: View {
                             // to whatever's underneath rather than the dialog's
                             // own button. Deferring past the current run loop
                             // turn lets the swipe-close animation finish first.
-                            Button(role: .destructive) {
+                            Button {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                                     showDeleteSetConfirm = true
                                 }
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
+                            .tint(.red)
                         }
                     }
             }

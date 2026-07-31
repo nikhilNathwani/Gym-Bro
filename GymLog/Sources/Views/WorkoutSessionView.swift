@@ -111,7 +111,7 @@ struct WorkoutSessionView: View {
         // exercise (Prev/Next) — a `reload()` triggered by that same
         // exercise's own logging (onLogged) must NOT reset it, or the user
         // would lose whatever they're mid-editing.
-        .onChange(of: currentIndex) { _, _ in setUpController() }
+        .onChange(of: currentIndex) { _, _ in Task { await setUpController() } }
         // Commits whatever field just lost focus (tapped away, or the
         // keyboard's own Done button above) — same pattern as every other
         // text-entry screen in the app.
@@ -167,7 +167,7 @@ struct WorkoutSessionView: View {
             if let detail = try await SupabaseService.shared.fetchRoutineDetail(id: routineId) {
                 routine = detail
                 currentIndex = min(currentIndex, max(0, detail.routineExercises.count - 1))
-                setUpController()
+                await setUpController()
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -185,13 +185,38 @@ struct WorkoutSessionView: View {
         }
     }
 
-    private func setUpController() {
+    // `exercises[currentIndex]` (this routine's own cached copy, refreshed
+    // wholesale by `reload()`) is only as fresh as the last time *some*
+    // exercise's first set of the day was logged — `onLogged` only fires
+    // from `ExerciseLogController.ensureTodayLog()`, once per exercise per
+    // day, and that fires *before* the set itself is created (the log row
+    // exists with zero sets at that point), so this array can permanently
+    // undercount an exercise's sets for the rest of the session: every
+    // add/edit/delete after the first set never touches this cache at all.
+    // Re-seeding a *new* controller straight from that stale copy on every
+    // Prev/Next (the previous approach) is exactly how a deleted set could
+    // reappear after paging away and back. Fetching this one exercise fresh
+    // here — same call `reloadExercise()` already uses — guarantees the new
+    // controller's `seed()` (which only ever runs once, at construction)
+    // starts from real data, at the cost of a brief loading state on each
+    // Prev/Next tap instead of an instant (but sometimes wrong) one.
+    private func setUpController() async {
         guard currentIndex < exercises.count else {
             controller = nil
             return
         }
+        let cached = exercises[currentIndex]
+        controller = nil
+        var fresh = cached
+        do {
+            if let detail = try await SupabaseService.shared.fetchExerciseDetail(id: cached.id) {
+                fresh = detail
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
         controller = ExerciseLogController(
-            exercise: exercises[currentIndex],
+            exercise: fresh,
             routineId: routineId,
             onLogged: { await reload() },
             onExerciseUpdated: { await reload() },

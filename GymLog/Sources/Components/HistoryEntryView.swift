@@ -114,19 +114,31 @@ struct HistoryEntryView: View {
         // masks the confirmation prompt entirely. Forcing an explicit tap
         // on "Delete" avoids the premature animation altogether.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            // No `role: .destructive` — that role makes List play its own
+            // optimistic row-collapse animation the instant the button is
+            // tapped, even with `allowsFullSwipe: false` and even though
+            // nothing is actually deleted until the confirmation dialog
+            // below is confirmed. The row then snapped back once that
+            // animation finished, reading as "deleted, then un-deleted
+            // itself" — the exact bug `allowsFullSwipe: false` above was
+            // meant to prevent, just triggered by a tap instead of a full
+            // swipe. A plain button tinted red keeps the same destructive
+            // look without the automatic animation.
+            //
             // Deferred past the current run loop turn — setting
             // `showDeleteConfirm` synchronously here races the swipe
             // action's own dismissal animation (same issue as the "Today's
             // Log" set row's delete swipe action; see its own comment),
             // which on-device tears the dialog down before it can be
             // tapped, or swallows a tap that lands during that window.
-            Button(role: .destructive) {
+            Button {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     showDeleteConfirm = true
                 }
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+            .tint(.red)
         }
     }
 

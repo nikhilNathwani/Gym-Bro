@@ -381,10 +381,19 @@ final class ExerciseLogController {
     /// from the server rather than reconcile locally. Doesn't touch
     /// `sets`/`notesDraft` (those aren't re-seeded from this), so it can't
     /// clobber whatever's still being actively edited in today's log.
+    ///
+    /// Also pings `onLogged` — this controller's own `exercise` is now
+    /// fresh, but `WorkoutSessionView` seeds a *new* controller from its own
+    /// separately-cached routine data every time Prev/Next changes
+    /// `currentIndex` (see its `setUpController`), not from this instance.
+    /// Without this, editing/deleting a past entry here, then paging away
+    /// and back, would re-seed from that stale cache and show the
+    /// undone edit again.
     func reloadExercise() async {
         do {
             if let detail = try await SupabaseService.shared.fetchExerciseDetail(id: exercise.id) {
                 exercise = detail
+                await onLogged()
             }
         } catch {
             onError(error.localizedDescription)
@@ -415,6 +424,14 @@ final class ExerciseLogController {
             await previousTask?.value
             do {
                 try await SupabaseService.shared.deleteSetLog(id: last.id)
+                // Same reason `reloadExercise()` pings this — this
+                // controller's own `sets` already reflects the deletion,
+                // but `WorkoutSessionView` seeds a *new* controller from its
+                // own separately-cached routine data on every Prev/Next, not
+                // from this instance. Without this, deleting a set then
+                // paging away and back would re-seed from that stale cache
+                // and show the deleted set again.
+                await onLogged()
             } catch {
                 onError(error.localizedDescription)
             }

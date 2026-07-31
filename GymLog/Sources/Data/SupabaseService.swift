@@ -43,12 +43,24 @@ final class SupabaseService {
     /// `lastPerformedAt` is a flat `Date?`, not a nested array), so this
     /// decodes into a private row type and reduces client-side, same
     /// approach as `fetchRoutineDetail`'s own nested-embed sort.
+    ///
+    /// A session only counts toward "last done" if it has a real logged
+    /// set — every other read of a log already treats zero sets as "not
+    /// logged" (see `ExerciseLogController.seed()`, `RoutineDetailView`'s
+    /// `hasLoggedToday`/`exerciseRow`), since deleting the last set of a log
+    /// leaves a real, childless `exercise_log` row behind rather than
+    /// deleting it outright, and deleting a whole log entry (`History`)
+    /// leaves its now-orphaned `workout_sessions` row behind too. Without
+    /// this filter, a routine whose only set was added then deleted (or
+    /// whose only logged entry was later deleted) kept showing a stale
+    /// "Last done" from that childless/orphaned session forever, since
+    /// nothing else ever cleans those rows up.
     func fetchRoutines() async throws -> [Routine] {
         struct RoutineRow: Decodable {
             let id: UUID
             let label: String?
             let sortOrder: Int
-            let workoutSessions: [SessionDate]
+            let workoutSessions: [SessionRow]
 
             enum CodingKeys: String, CodingKey {
                 case id, label
@@ -56,23 +68,35 @@ final class SupabaseService {
                 case workoutSessions = "workout_sessions"
             }
         }
-        struct SessionDate: Decodable {
+        struct SessionRow: Decodable {
             let performedAt: Date
-            enum CodingKeys: String, CodingKey { case performedAt = "performed_at" }
+            let exerciseLogs: [ExerciseLogSetCount]
+            enum CodingKeys: String, CodingKey {
+                case performedAt = "performed_at"
+                case exerciseLogs = "exercise_logs"
+            }
+        }
+        struct ExerciseLogSetCount: Decodable {
+            let setLogs: [IDRow]
+            enum CodingKeys: String, CodingKey { case setLogs = "set_logs" }
         }
 
         let rows: [RoutineRow] = try await client.from("routines")
-            .select("id, label, sort_order, workout_sessions(performed_at)")
+            .select("id, label, sort_order, workout_sessions(performed_at, exercise_logs(set_logs(id)))")
             .order("sort_order")
             .execute()
             .value
 
         return rows.map { row in
-            Routine(
+            let lastPerformedAt = row.workoutSessions
+                .filter { session in session.exerciseLogs.contains { !$0.setLogs.isEmpty } }
+                .map(\.performedAt)
+                .max()
+            return Routine(
                 id: row.id,
                 label: row.label,
                 sortOrder: row.sortOrder,
-                lastPerformedAt: row.workoutSessions.map(\.performedAt).max()
+                lastPerformedAt: lastPerformedAt
             )
         }
     }
