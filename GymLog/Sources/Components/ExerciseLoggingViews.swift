@@ -32,9 +32,11 @@ struct ExercisePageList: View {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField(
                         "Exercise name",
-                        text: Binding(get: { controller.nameDraft }, set: { controller.nameDraft = $0 })
+                        text: Binding(get: { controller.nameDraft }, set: { controller.nameDraft = $0 }),
+                        axis: .vertical
                     )
                     .font(.title.bold())
+                    .lineLimit(1...2)
                     .focused(focusedField, equals: .name)
                     ExerciseSummarySection(controller: controller, focusedField: focusedField)
                 }
@@ -311,6 +313,19 @@ struct ExerciseLoggingSections: View {
                 Label("Add Set", systemImage: "plus.circle.fill")
             }
             .accessibilityIdentifier("addSetButton")
+            // The native row separator's default leading inset aligns with
+            // this row's *label text* (skipping past the leading icon), not
+            // the row's full content width — and its trailing edge falls
+            // short of the row's right margin too, so it reads as an
+            // arbitrary partial-width line rather than an intentional
+            // divider. Hiding it and drawing an explicit one (matching the
+            // row's own default left/right insets, same as every other row
+            // here) spans the full width predictably instead.
+            .listRowSeparator(.hidden)
+            VStack(spacing: 0) { Divider() }
+                .frame(maxWidth: .infinity)
+                .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                .listRowSeparator(.hidden)
 
             // Lives in "Today's Log" itself, not a separate "Notes"
             // section — a note is part of today's entry, not its own

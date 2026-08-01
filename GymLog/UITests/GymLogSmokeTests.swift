@@ -12,6 +12,23 @@ final class GymLogSmokeTests: XCTestCase {
             add(attachment)
         }
 
+        // Prev/Next now re-fetches the target exercise fresh over the
+        // network before swapping controllers (`WorkoutSessionView.
+        // setUpController` — fixes a deleted set reappearing after paging
+        // away and back, since re-seeding from the routine's own cache
+        // could be stale), so the page briefly shows a loading state
+        // instead of switching instantly. A blind `sleep` guess for that
+        // network round-trip is exactly the kind of flake that got the
+        // reappearing-set bug missed in the first place — poll instead.
+        func waitForGone(_ element: XCUIElement, timeout: TimeInterval = 8) -> Bool {
+            let deadline = Date().addingTimeInterval(timeout)
+            while Date() < deadline {
+                if !element.exists || !element.isHittable { return true }
+                usleep(200_000)
+            }
+            return false
+        }
+
         func waitAndTap(_ predicate: String, timeout: TimeInterval = 8, exact: Bool = false) {
             let format = exact ? "label == %@" : "label CONTAINS[c] %@"
             let element = app.descendants(matching: .any)
@@ -52,8 +69,16 @@ final class GymLogSmokeTests: XCTestCase {
         // Scoped by placeholder rather than a bare `.firstMatch` — several
         // screens share generic-looking text fields (e.g. a name field),
         // so this stays unambiguous regardless of which one is on screen.
+        //
+        // Searches all descendants rather than the typed `app.textFields`
+        // query — a multi-line field (`axis: .vertical`, e.g. the exercise
+        // name field once it wraps to 2 lines, or Cues/notes) can get
+        // reported as a `TextView` instead of a `TextField` once it's
+        // actually rendering more than one line, and `app.textFields` misses
+        // those entirely. Same non-issue as this file's own Button lookups
+        // below (`waitAndTap`/`tapId`) for the same underlying reason.
         func textField(placeholder: String, timeout: TimeInterval = 8) -> XCUIElement {
-            let element = app.textFields
+            let element = app.descendants(matching: .any)
                 .matching(NSPredicate(format: "placeholderValue == %@", placeholder))
                 .firstMatch
             XCTAssertTrue(element.waitForExistence(timeout: timeout), "Missing text field: \(placeholder)")
@@ -66,9 +91,15 @@ final class GymLogSmokeTests: XCTestCase {
         // `ExerciseLogController`'s type doc comment), so "is this exercise's
         // page showing" has to check a text field's *value*, not a static
         // text's label — a `TextField`'s accessibility *label* is its
-        // placeholder ("Exercise name"), not its current text.
+        // placeholder ("Exercise name"), not its current text. Searches all
+        // descendants, not the typed `app.textFields` query, for the same
+        // TextField/TextView reason as `textField(placeholder:)` above — a
+        // renamed exercise long enough to wrap to 2 lines flips this
+        // specific field's automation type.
         func exerciseTitleField(_ name: String) -> XCUIElement {
-            app.textFields.matching(NSPredicate(format: "value == %@", name)).firstMatch
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "value == %@", name))
+                .firstMatch
         }
 
         // 1. The single root screen -> first routine. Routine names are now
@@ -142,13 +173,13 @@ final class GymLogSmokeTests: XCTestCase {
         XCTAssertTrue(exerciseTitleField(exerciseName).exists, "Next should be a no-op on the last exercise")
 
         tapId("previousExerciseButton")
-        sleep(1)
-        XCTAssertFalse(exerciseTitleField(exerciseName).exists, "Previous should move to the previous exercise")
+        XCTAssertTrue(
+            waitForGone(exerciseTitleField(exerciseName)),
+            "Previous should move to the previous exercise")
 
         tapId("nextExerciseButton")
-        sleep(1)
         XCTAssertTrue(
-            exerciseTitleField(exerciseName).waitForExistence(timeout: 5),
+            exerciseTitleField(exerciseName).waitForExistence(timeout: 8),
             "Next should return to the new exercise")
         screenshot("02c-after-paging")
 
