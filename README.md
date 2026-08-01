@@ -71,7 +71,7 @@ SUPABASE_HOST = your-project.supabase.co
 SUPABASE_ANON_KEY = your-anon-key
 ```
 
-`Secrets.xcconfig` is gitignored. Same Supabase project as the companion web app (`../Gym Bro React`) — pull the values from its `.env.local` if you already have that set up.
+`Secrets.xcconfig` is gitignored. Pull the Supabase host/anon key from the Supabase dashboard, or from the pre-Swift Next.js version of this app (see the commit before "Pivot Gym Bro from Next.js to native Swift/SwiftUI") if you still have its `.env.local` lying around.
 
 ## Getting Started
 
