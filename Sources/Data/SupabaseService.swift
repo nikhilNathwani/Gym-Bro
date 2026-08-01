@@ -104,6 +104,18 @@ final class SupabaseService {
     /// Nested-embed ordering (routine_exercises -> exercise -> exercise_logs
     /// -> set_logs) isn't reliable through the query builder, so sort
     /// client-side after decode — same approach as routines/[id]/page.tsx.
+    ///
+    /// This used to only apply to `exerciseLogs`, leaving `routineExercises`
+    /// itself trusting `.order("sort_order", referencedTable:)` alone —
+    /// harmless when every row's `sort_order` is unique, but Postgres/
+    /// PostgREST make no ordering guarantee among *ties*, so two otherwise-
+    /// identical fetches of the same routine could come back with a
+    /// different exercise order whenever a tie existed (e.g. a same-day
+    /// burst of exercises added/removed leaving duplicate sort_order
+    /// values) — surfaced as `WorkoutSessionView`'s Prev/Next landing on
+    /// the wrong exercise for a given position. Sorting client-side too
+    /// makes the result deterministic regardless of the server's tie-break
+    /// behavior.
     func fetchRoutineDetail(id: UUID) async throws -> RoutineDetail? {
         let detail: RoutineDetail? = try await client.from("routines")
             .select(
@@ -116,11 +128,13 @@ final class SupabaseService {
             .value
 
         guard var routine = detail else { return nil }
-        routine.routineExercises = routine.routineExercises.map { entry in
-            var entry = entry
-            entry.exercise.exerciseLogs = sortedLogs(entry.exercise.exerciseLogs)
-            return entry
-        }
+        routine.routineExercises = routine.routineExercises
+            .sorted { $0.sortOrder < $1.sortOrder }
+            .map { entry in
+                var entry = entry
+                entry.exercise.exerciseLogs = sortedLogs(entry.exercise.exerciseLogs)
+                return entry
+            }
         return routine
     }
 
