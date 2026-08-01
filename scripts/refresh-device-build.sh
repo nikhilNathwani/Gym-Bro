@@ -20,7 +20,7 @@
 
 set -uo pipefail
 
-PROJECT_DIR="/Users/nikhilnathwani/Documents/Projects/Gym Log/GymLog"
+PROJECT_DIR="/Users/nikhilnathwani/Documents/Projects/Gym Log"
 DEVICE_ID="EBE19FC4-41CE-59E7-8F79-3BD8735FD6C4"
 BUNDLE_ID="com.nikhilnathwani.gymlog"
 DERIVED_DATA="$HOME/Library/Developer/GymLogAutoRefresh"

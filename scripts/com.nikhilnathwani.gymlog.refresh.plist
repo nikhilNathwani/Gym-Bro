@@ -6,7 +6,7 @@
     <string>com.nikhilnathwani.gymlog.refresh</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/nikhilnathwani/Documents/Projects/Gym Log/GymLog/scripts/refresh-device-build.sh</string>
+        <string>/Users/nikhilnathwani/Documents/Projects/Gym Log/scripts/refresh-device-build.sh</string>
     </array>
     <!-- Checked daily at 3:01am — 1 minute after `sudo pmset repeat wake`
          brings the Mac up at 3:00am, giving Wi-Fi a moment to reconnect

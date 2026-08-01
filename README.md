@@ -12,7 +12,7 @@ Gym Log is a SwiftUI iOS app for tracking strength-training workouts. Routines (
 - Optimistic, per-field persistence to Supabase, with the controller pinned to `@MainActor` to prevent concurrent stepper taps from racing each other and losing an update
 - Full editable history per exercise — past sessions can be corrected or deleted, not just viewed after the fact
 - One shared exercise page (name/target/cues/today's log/last time/history) reused mid-routine and standalone, replacing what used to be two separate, driftable pages
-- Free-tier device installs (no paid Apple Developer account) kept alive indefinitely via a scheduled auto-rebuild/reinstall job — see `GymLog/scripts/README.md`
+- Free-tier device installs (no paid Apple Developer account) kept alive indefinitely via a scheduled auto-rebuild/reinstall job — see `scripts/README.md`
 
 ## Tech Stack
 
@@ -24,39 +24,38 @@ Gym Log is a SwiftUI iOS app for tracking strength-training workouts. Routines (
 ## Project Structure
 
 ```text
-GymLog/
-  project.yml              # XcodeGen project definition
-  Secrets.xcconfig.example  # Template for local Supabase credentials
+project.yml              # XcodeGen project definition
+Secrets.xcconfig.example  # Template for local Supabase credentials
 
-  Sources/
-    GymLogApp.swift         # App entry point
-    Data/
-      Models.swift           # Routine/Exercise/SetLog/ExerciseLog domain types
-      SupabaseService.swift  # All Supabase reads/writes
-      RoutineLetter.swift
-    Components/
-      ExerciseLogController.swift  # Editable state + persistence for one exercise
-      ExerciseLoggingViews.swift   # Today's Log / Last Time / Cues / History sections
-      HistoryEntryView.swift       # Past-session summary + inline batch editor
-      AssignExercisePickerView.swift
-      AddExerciseToRoutineSheet.swift
-      Styles.swift
-    Views/
-      RoutinesListView.swift
-      RoutineDetailView.swift
-      WorkoutSessionView.swift    # Prev/Next paging through a routine's exercises
-      ExerciseDetailView.swift    # Standalone (no paging) exercise page
-      ExerciseLibraryView.swift
-      NewExerciseView.swift
-      AppRoute.swift
+Sources/
+  GymLogApp.swift         # App entry point
+  Data/
+    Models.swift           # Routine/Exercise/SetLog/ExerciseLog domain types
+    SupabaseService.swift  # All Supabase reads/writes
+    RoutineLetter.swift
+  Components/
+    ExerciseLogController.swift  # Editable state + persistence for one exercise
+    ExerciseLoggingViews.swift   # Today's Log / Last Time / Cues / History sections
+    HistoryEntryView.swift       # Past-session summary + inline batch editor
+    AssignExercisePickerView.swift
+    AddExerciseToRoutineSheet.swift
+    Styles.swift
+  Views/
+    RoutinesListView.swift
+    RoutineDetailView.swift
+    WorkoutSessionView.swift    # Prev/Next paging through a routine's exercises
+    ExerciseDetailView.swift    # Standalone (no paging) exercise page
+    ExerciseLibraryView.swift
+    NewExerciseView.swift
+    AppRoute.swift
 
-  UITests/
-    GymLogSmokeTests.swift
+UITests/
+  GymLogSmokeTests.swift
 
-  scripts/
-    refresh-device-build.sh   # Rebuilds + reinstalls on-device every 5 days
-    com.nikhilnathwani.gymlog.refresh.plist
-    README.md                 # Why + how the auto-refresh automation works
+scripts/
+  refresh-device-build.sh   # Rebuilds + reinstalls on-device every 5 days
+  com.nikhilnathwani.gymlog.refresh.plist
+  README.md                 # Why + how the auto-refresh automation works
 ```
 
 ## Environment Variables
@@ -64,7 +63,7 @@ GymLog/
 Copy the example config and fill in real values:
 
 ```bash
-cp GymLog/Secrets.xcconfig.example GymLog/Secrets.xcconfig
+cp Secrets.xcconfig.example Secrets.xcconfig
 ```
 
 ```text
@@ -78,7 +77,6 @@ SUPABASE_ANON_KEY = your-anon-key
 
 ```bash
 brew install xcodegen   # if not already installed
-cd GymLog
 xcodegen generate
 open GymLog.xcodeproj
 ```
@@ -91,7 +89,7 @@ xcodebuild -scheme GymLog -destination 'generic/platform=iOS Simulator' build
 
 ## Scripts
 
-`GymLog/scripts/` handles keeping a free-tier (non-Developer-Program) device install alive past Apple's 7-day signing expiry, via a `launchd` job that rebuilds and reinstalls every 5 days with zero manual intervention. See `GymLog/scripts/README.md` for the full setup, log locations, and how to check on it.
+`scripts/` handles keeping a free-tier (non-Developer-Program) device install alive past Apple's 7-day signing expiry, via a `launchd` job that rebuilds and reinstalls every 5 days with zero manual intervention. See `scripts/README.md` for the full setup, log locations, and how to check on it.
 
 ## Why This Project
 

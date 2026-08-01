@@ -48,6 +48,7 @@
 		4D654E84FA55E83793E7499D /* AssignExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignExercisePickerView.swift; sourceTree = "<group>"; };
 		50A267584A3DC4AD30E1B89F /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
 		54969D4ADBF373F716324638 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		555165EEAA881ECAA837F01C /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		80D2CBF540BF066276DABAAE /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		84C6A4A9793B4AE729076DB1 /* GymLogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GymLogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8632E2FD7E016C12D979A3 /* RoutinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesListView.swift; sourceTree = "<group>"; };
@@ -55,7 +56,6 @@
 		9248613D1E12C25BACB3F23F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A2990C4C02EEC369167D3777 /* GymLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymLogApp.swift; sourceTree = "<group>"; };
 		A573701ADD0E291F5D9F4C2D /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
-		A9C1731F4FFD93BEC3DFB413 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		B30A6CA5A93974E8B0B8A373 /* ExerciseLogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLogController.swift; sourceTree = "<group>"; };
 		BC2D28CA49B205D2877BA1E3 /* HistoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryEntryView.swift; sourceTree = "<group>"; };
 		CCE5B7C8A9F6B7C1A069590B /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -80,7 +80,7 @@
 		1E79CF4A91A6362D4F565AEF = {
 			isa = PBXGroup;
 			children = (
-				91CFDAFAA9EF176C34A3A253 /* GymLog */,
+				6597C9BF7D3DF8DD35704258 /* Gym Log */,
 				E04563207FA7D97087EACFB5 /* Sources */,
 				45CC151804F1AC6AD1B6C42A /* UITests */,
 				34BD467E8B122849F21D54BE /* Products */,
@@ -114,12 +114,12 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		91CFDAFAA9EF176C34A3A253 /* GymLog */ = {
+		6597C9BF7D3DF8DD35704258 /* Gym Log */ = {
 			isa = PBXGroup;
 			children = (
-				A9C1731F4FFD93BEC3DFB413 /* Secrets.xcconfig */,
+				555165EEAA881ECAA837F01C /* Secrets.xcconfig */,
 			);
-			name = GymLog;
+			name = "Gym Log";
 			path = .;
 			sourceTree = "<group>";
 		};
@@ -344,7 +344,7 @@
 		};
 		BB78277A682D8ECCBDA491C8 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A9C1731F4FFD93BEC3DFB413 /* Secrets.xcconfig */;
+			baseConfigurationReference = 555165EEAA881ECAA837F01C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -448,7 +448,7 @@
 		};
 		F2D5228BB185D499760C596C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A9C1731F4FFD93BEC3DFB413 /* Secrets.xcconfig */;
+			baseConfigurationReference = 555165EEAA881ECAA837F01C /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
