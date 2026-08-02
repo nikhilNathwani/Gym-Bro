@@ -492,12 +492,16 @@ struct SetValueStepper<Field: Hashable>: View {
                 .font(.title2.weight(.semibold))
                 .monospacedDigit()
                 .multilineTextAlignment(.center)
-                // Fixed width, generous enough for a value like "137.5"
-                // without ever needing to grow — a `.fixedSize()` field
-                // (tried first, to fix truncation on longer values) resized
-                // on every keystroke/increment, which shifted the stepper's
-                // +/- buttons out from under a finger mid rapid-tap.
-                .frame(width: 64)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                // Fixed width, wide enough for ~6 digits at this font size
+                // — a `.fixedSize()` field (tried first, to fix truncation
+                // on longer values) resized on every keystroke/increment,
+                // which shifted the stepper's +/- buttons out from under a
+                // finger mid rapid-tap. `minimumScaleFactor` handles the
+                // rare overflow beyond 6 digits by shrinking text in place
+                // rather than clipping, without changing the frame width.
+                .frame(width: 92)
                 .accessibilityIdentifier("\(idPrefix)-field")
             Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
                 .labelsHidden()
