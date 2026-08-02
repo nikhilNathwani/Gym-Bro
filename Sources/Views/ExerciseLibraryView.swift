@@ -5,6 +5,8 @@ import SwiftUI
 /// same routes as everywhere else in the app), so its leading toolbar slot
 /// is the automatic back chevron rather than a custom leading item.
 struct ExerciseLibraryView: View {
+    @Binding var path: NavigationPath
+
     @State private var exercises: [Exercise] = []
     @State private var isLoading = true
     @State private var showNewExercise = false
@@ -99,7 +101,10 @@ struct ExerciseLibraryView: View {
             }
         }
         .sheet(isPresented: $showNewExercise) {
-            NewExerciseView(onCreated: { _ in Task { await load() } })
+            NewExerciseView(onCreated: { id in
+                Task { await load() }
+                path.append(AppRoute.exercise(id))
+            })
         }
         .task { await load() }
         .refreshable { await load() }

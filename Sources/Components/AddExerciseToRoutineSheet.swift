@@ -9,6 +9,7 @@ struct AddExerciseToRoutineSheet: View {
     let routineId: UUID
     let unassignedExercises: [Exercise]
     let onChanged: () async -> Void
+    let onCreated: (UUID) -> Void
     let onError: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +24,7 @@ struct AddExerciseToRoutineSheet: View {
                         await onChanged()
                         dismiss()
                     },
+                    onCreated: onCreated,
                     onError: onError,
                     autofocus: true
                 )

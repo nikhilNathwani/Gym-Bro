@@ -18,6 +18,7 @@ import SwiftUI
 /// tappable-through to that link.)
 struct RoutineDetailView: View {
     let routineId: UUID
+    @Binding var path: NavigationPath
 
     @State private var routine: RoutineDetail?
     @State private var routineIndex = 0
@@ -219,6 +220,17 @@ struct RoutineDetailView: View {
                     routineId: routineId,
                     unassignedExercises: unassignedExercises(routine),
                     onChanged: { await reload() },
+                    onCreated: { id in
+                        // Runs after `onChanged`'s reload above, so the new
+                        // exercise is already in `routine.routineExercises`
+                        // (appended last) — its index there is exactly the
+                        // "N of N" position `WorkoutSessionView` should open
+                        // to, same paging context as tapping any other
+                        // exercise row in this routine.
+                        if let index = self.routine?.routineExercises.firstIndex(where: { $0.exercise.id == id }) {
+                            path.append(AppRoute.workoutSession(routineId: routineId, startIndex: index))
+                        }
+                    },
                     onError: { errorMessage = $0 }
                 )
             }

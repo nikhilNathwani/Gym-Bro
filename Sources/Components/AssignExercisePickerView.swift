@@ -8,6 +8,7 @@ struct AssignExercisePickerView: View {
     let routineId: UUID
     let unassignedExercises: [Exercise]
     let onChanged: () async -> Void
+    let onCreated: (UUID) -> Void
     let onError: (String) -> Void
     var autofocus: Bool = false
 
@@ -74,10 +75,11 @@ struct AssignExercisePickerView: View {
         isBusy = true
         defer { isBusy = false }
         do {
-            try await SupabaseService.shared.createExercise(name: trimmed, routineId: routineId)
+            let id = try await SupabaseService.shared.createExercise(name: trimmed, routineId: routineId)
             query = ""
             addedTick += 1
             await onChanged()
+            onCreated(id)
         } catch {
             onError(error.localizedDescription)
         }

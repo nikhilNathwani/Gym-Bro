@@ -151,12 +151,12 @@ struct RoutinesListView: View {
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
                 case .routine(let id):
-                    RoutineDetailView(routineId: id)
+                    RoutineDetailView(routineId: id, path: $path)
                 case .exercise(let id): ExerciseDetailView(exerciseId: id)
                 case .workoutSession(let routineId, let startIndex):
                     WorkoutSessionView(routineId: routineId, startIndex: startIndex)
                 case .exerciseLibrary:
-                    ExerciseLibraryView()
+                    ExerciseLibraryView(path: $path)
                 }
             }
         }
